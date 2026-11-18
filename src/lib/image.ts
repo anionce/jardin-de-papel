@@ -1,7 +1,7 @@
 const MAX_SIDE = 500
 const QUALITY = 0.82
 
-export async function imageFileToDataUrl(file: File): Promise<string> {
+export const imageFileToDataUrl = async (file: File): Promise<string> => {
   const bitmap = await createImageBitmap(file)
   const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height))
   const canvas = document.createElement("canvas")
@@ -16,7 +16,7 @@ export async function imageFileToDataUrl(file: File): Promise<string> {
 
 export const isUploadedImage = (url: string) => url.startsWith("data:")
 
-export function preloadImage(url: string, timeoutMs = 6000): Promise<boolean> {
+export const preloadImage = (url: string, timeoutMs = 6000): Promise<boolean> => {
   return new Promise((resolve) => {
     const img = new Image()
     img.referrerPolicy = "no-referrer"
@@ -33,12 +33,7 @@ export function preloadImage(url: string, timeoutMs = 6000): Promise<boolean> {
   })
 }
 
-export async function nextLoadableCover(
-  urls: string[],
-  current: number,
-  failed: Set<string>,
-  load: (url: string) => Promise<boolean> = preloadImage
-): Promise<number> {
+export const nextLoadableCover = async (urls: string[], current: number, failed: Set<string>, load: (url: string) => Promise<boolean> = preloadImage): Promise<number> => {
   for (let step = 1; step <= urls.length; step++) {
     const index = (current + step) % urls.length
     if (index === current) break

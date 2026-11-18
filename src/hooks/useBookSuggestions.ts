@@ -4,7 +4,7 @@ import { searchBookSuggestions, type BookSuggestion } from "@/lib/bookLookup"
 const MIN_CHARS = 3
 const DEBOUNCE_MS = 450
 
-export function useBookSuggestions(title: string, author: string, enabled: boolean) {
+export const useBookSuggestions = (title: string, author: string, enabled: boolean) => {
   const [result, setResult] = useState<{ query: string; books: BookSuggestion[]; partial?: boolean }>({
     query: "",
     books: [],

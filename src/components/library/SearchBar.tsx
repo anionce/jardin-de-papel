@@ -1,7 +1,7 @@
 import { Search, X } from "lucide-react"
 import { useFiltersStore } from "@/store/useFiltersStore"
 
-export function SearchBar() {
+export const SearchBar = () => {
   const text = useFiltersStore((s) => s.text)
   const setText = useFiltersStore((s) => s.setText)
 

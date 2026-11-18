@@ -2,7 +2,7 @@ import { BookStack } from "@/components/decor/BookStack"
 import { Flower } from "@/components/decor/Flower"
 import { SearchBar } from "@/components/library/SearchBar"
 
-export function LibraryHero() {
+export const LibraryHero = () => {
   return (
     <section className="scallop-bottom relative mb-12 rounded-t-[1.75rem] bg-burgundy px-6 pt-10 pb-12 [--scallop:var(--burgundy)] sm:px-12">
       <Flower className="absolute top-5 left-[46%] hidden w-9 sm:block" />

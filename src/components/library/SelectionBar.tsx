@@ -9,7 +9,7 @@ import type { Book } from "@/lib/types"
 import { useLibraryStore } from "@/store/useLibraryStore"
 import { useSelectionStore } from "@/store/useSelectionStore"
 
-export function SelectionBar({ visibleBooks }: { visibleBooks: Book[] }) {
+export const SelectionBar = ({ visibleBooks }: { visibleBooks: Book[] }) => {
   const { ids, stop, setMany, clear } = useSelectionStore()
   const books = useLibraryStore((s) => s.books)
   const genres = useMemo(() => uniqueGenres(books), [books])
@@ -22,7 +22,7 @@ export function SelectionBar({ visibleBooks }: { visibleBooks: Book[] }) {
   const count = selected.length
   const allVisibleSelected = visibleBooks.length > 0 && visibleBooks.every((b) => ids.has(b.id))
 
-  async function run(action: () => Promise<void>) {
+  const run = async (action: () => Promise<void>) => {
     setBusy(true)
     try {
       await action()
@@ -32,7 +32,7 @@ export function SelectionBar({ visibleBooks }: { visibleBooks: Book[] }) {
     }
   }
 
-  async function handleDelete() {
+  const handleDelete = async () => {
     if (!confirmDelete) {
       setConfirmDelete(true)
       return
@@ -41,7 +41,7 @@ export function SelectionBar({ visibleBooks }: { visibleBooks: Book[] }) {
     clear()
   }
 
-  async function handleGenre(mode: "add" | "remove") {
+  const handleGenre = async (mode: "add" | "remove") => {
     const name = genre.trim()
     if (!name) return
     const adding = mode === "add"

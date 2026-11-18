@@ -9,13 +9,13 @@ export interface LibraryQuery {
   sort: SortKey
 }
 
-function haystack(book: Book): string {
+const haystack = (book: Book): string => {
   return normalize(
     [book.title, book.author, book.publisher, ...bookGenres(book), book.year, book.isbn].filter(Boolean).join(" ")
   )
 }
 
-function matchesText(book: Book, text: string): boolean {
+const matchesText = (book: Book, text: string): boolean => {
   const terms = normalize(text).split(/\s+/).filter(Boolean)
   if (terms.length === 0) return true
   const hay = haystack(book)
@@ -34,7 +34,7 @@ const SORT_VALUE: Record<SortField, (b: Book) => string | number | undefined> = 
 
 export const DEFAULT_SORT: SortKey = "recent-desc"
 
-function sorter(key: SortKey): (a: Book, b: Book) => number {
+const sorter = (key: SortKey): (a: Book, b: Book) => number => {
   const [field, direction] = key.split("-") as [SortField, "asc" | "desc"]
   const value = SORT_VALUE[field] ?? SORT_VALUE.recent
   const sign = direction === "desc" ? -1 : 1
@@ -51,7 +51,7 @@ function sorter(key: SortKey): (a: Book, b: Book) => number {
   }
 }
 
-export function filterBooks(books: Book[], query: LibraryQuery): Book[] {
+export const filterBooks = (books: Book[], query: LibraryQuery): Book[] => {
   return books
     .filter((book) => {
       if (query.read === "read" && !book.read) return false
@@ -62,12 +62,12 @@ export function filterBooks(books: Book[], query: LibraryQuery): Book[] {
     .sort(sorter(query.sort))
 }
 
-export function uniqueGenres(books: Book[]): string[] {
+export const uniqueGenres = (books: Book[]): string[] => {
   const genres = new Set(books.flatMap(bookGenres))
   return [...genres].sort(collator.compare)
 }
 
-export function uniquePublishers(books: Book[]): string[] {
+export const uniquePublishers = (books: Book[]): string[] => {
   const counts = new Map<string, Map<string, number>>()
   for (const { publisher } of books) {
     const name = publisher?.trim()
@@ -81,7 +81,7 @@ export function uniquePublishers(books: Book[]): string[] {
   return names.sort(collator.compare)
 }
 
-export function bookKey(book: Pick<Book, "title" | "author" | "goodreadsId">): string {
+export const bookKey = (book: Pick<Book, "title" | "author" | "goodreadsId">): string => {
   if (book.goodreadsId) return `gr:${book.goodreadsId}`
   return `ta:${normalize(book.title ?? "")}|${normalize(book.author ?? "")}`
 }

@@ -11,7 +11,7 @@ import { useFiltersStore } from "@/store/useFiltersStore"
 import type { Book } from "@/lib/types"
 import { useLibraryStore } from "@/store/useLibraryStore"
 
-export function GenresPage() {
+export const GenresPage = () => {
   const books = useLibraryStore((s) => s.books)
   const [query, setQuery] = useState("")
 
@@ -56,7 +56,7 @@ export function GenresPage() {
   )
 }
 
-function GenreItem({ row, existing }: { row: GenreUsage; existing: GenreUsage[] }) {
+const GenreItem = ({ row, existing }: { row: GenreUsage; existing: GenreUsage[] }) => {
   const navigate = useNavigate()
   const setGenreFilter = useFiltersStore((s) => s.setGenres)
   const books = useLibraryStore((s) => s.books)
@@ -69,7 +69,7 @@ function GenreItem({ row, existing }: { row: GenreUsage; existing: GenreUsage[] 
 
   const target = existing.find((r) => r.name !== row.name && normalize(r.name) === normalize(name))
 
-  async function updateRowBooks(change: (book: Book) => string[] | undefined) {
+  const updateRowBooks = async (change: (book: Book) => string[] | undefined) => {
     const ids = new Set(row.ids)
     setBusy(true)
     try {
@@ -79,7 +79,7 @@ function GenreItem({ row, existing }: { row: GenreUsage; existing: GenreUsage[] 
     }
   }
 
-  async function handleRename() {
+  const handleRename = async () => {
     const next = target?.name ?? name.trim()
     if (!next || next === row.name) {
       setEditing(false)
@@ -88,7 +88,7 @@ function GenreItem({ row, existing }: { row: GenreUsage; existing: GenreUsage[] 
     await updateRowBooks((b) => renameGenre(b, row.name, next))
   }
 
-  async function handleDelete() {
+  const handleDelete = async () => {
     if (!confirmDelete) {
       setConfirmDelete(true)
       return
@@ -96,7 +96,7 @@ function GenreItem({ row, existing }: { row: GenreUsage; existing: GenreUsage[] 
     await updateRowBooks((b) => removeGenre(b, row.name))
   }
 
-  function showBooks() {
+  const showBooks = () => {
     setText("")
     setReadFilter("all")
     setGenreFilter([row.name])

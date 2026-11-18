@@ -10,11 +10,7 @@ interface CoverCandidates {
   urls: string[]
 }
 
-export function useCoverSearch(
-  values: FormValues,
-  setValues: Dispatch<SetStateAction<FormValues>>,
-  editing: Book | null
-) {
+export const useCoverSearch = (values: FormValues, setValues: Dispatch<SetStateAction<FormValues>>, editing: Book | null) => {
   const [searching, setSearching] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [candidates, setCandidates] = useState<CoverCandidates | null>(null)
@@ -23,7 +19,7 @@ export function useCoverSearch(
 
   const setCover = (coverUrl: string) => setValues((v) => ({ ...v, coverUrl, coverRemoved: false }))
 
-  async function loadCandidates(): Promise<string[] | null> {
+  const loadCandidates = async (): Promise<string[] | null> => {
     const draft = toDraft(values)
     const key = coverSearchKey(draft)
     if (candidates?.key === key) return candidates.urls
@@ -46,7 +42,7 @@ export function useCoverSearch(
     }
   }
 
-  async function findNextCover() {
+  const findNextCover = async () => {
     setMessage(null)
     const urls = await loadCandidates()
     if (!urls) return
@@ -75,7 +71,7 @@ export function useCoverSearch(
     if (upcoming && !failedCovers.current.has(upcoming)) void preloadImage(upcoming)
   }
 
-  async function uploadCover(file: File) {
+  const uploadCover = async (file: File) => {
     setSearching(true)
     setMessage(null)
     try {
@@ -88,7 +84,7 @@ export function useCoverSearch(
     }
   }
 
-  async function findPublisherEdition() {
+  const findPublisherEdition = async () => {
     const publisher = values.publisher.trim()
     if (!publisher || !values.title.trim() || normalize(publisher) === normalize(editionPublisher)) return
     setEditionPublisher(publisher)

@@ -27,7 +27,7 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 const selectClass =
   "h-9 cursor-pointer rounded-full border border-border bg-background px-3.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/20"
 
-export function LibraryFilters({ genres }: { genres: string[] }) {
+export const LibraryFilters = ({ genres }: { genres: string[] }) => {
   const { read, sort, setRead, setSort } = useFiltersStore()
 
   return (
@@ -61,7 +61,7 @@ export function LibraryFilters({ genres }: { genres: string[] }) {
   )
 }
 
-function GenreFilter({ genres }: { genres: string[] }) {
+const GenreFilter = ({ genres }: { genres: string[] }) => {
   const selected = useFiltersStore((s) => s.genres)
   const toggleGenre = useFiltersStore((s) => s.toggleGenre)
   const setGenres = useFiltersStore((s) => s.setGenres)

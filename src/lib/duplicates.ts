@@ -5,13 +5,13 @@ import type { Book, BookDraft } from "@/lib/types"
 
 type Comparable = Pick<Book, "title" | "author" | "workKey" | "workVersion">
 
-function trustedWork(book: Comparable): string | undefined {
+const trustedWork = (book: Comparable): string | undefined => {
   return (book.workVersion ?? 0) >= TRUSTED_WORK_VERSION ? book.workKey : undefined
 }
 
 export type DuplicateReason = "obra" | "título"
 
-export function duplicateReason(a: Comparable, b: Comparable): DuplicateReason | null {
+export const duplicateReason = (a: Comparable, b: Comparable): DuplicateReason | null => {
   const work = trustedWork(a)
   if (work && work === trustedWork(b)) return "obra"
 
@@ -21,7 +21,7 @@ export function duplicateReason(a: Comparable, b: Comparable): DuplicateReason |
   return null
 }
 
-function dismissed(a: Book, b: Book): boolean {
+const dismissed = (a: Book, b: Book): boolean => {
   return Boolean(a.distinctFrom?.includes(b.id) || b.distinctFrom?.includes(a.id))
 }
 
@@ -30,7 +30,7 @@ export interface DuplicateGroup {
   reason: DuplicateReason
 }
 
-export function findDuplicateGroups(books: Book[]): DuplicateGroup[] {
+export const findDuplicateGroups = (books: Book[]): DuplicateGroup[] => {
   const parent = new Map<string, string>()
   const reasonOf = new Map<string, DuplicateReason>()
   const linked = new Set<string>()
@@ -78,7 +78,7 @@ export function findDuplicateGroups(books: Book[]): DuplicateGroup[] {
     .map(([root, group]) => ({ books: group, reason: reasonOf.get(root) ?? "título" }))
 }
 
-export function similarBooksFinder(books: Book[]) {
+export const similarBooksFinder = (books: Book[]) => {
   const byAuthor = new Map<string, Book[]>()
   for (const book of books) {
     const key = authorKey(book.author)
@@ -88,7 +88,7 @@ export function similarBooksFinder(books: Book[]) {
     (byAuthor.get(authorKey(draft.author)) ?? []).filter((b) => duplicateReason(draft, b) !== null)
 }
 
-export function mergeMissingFields(keep: Book, others: Book[]): Partial<BookDraft> {
+export const mergeMissingFields = (keep: Book, others: Book[]): Partial<BookDraft> => {
   const fields = ["title", "author", "publisher", "year", "pages", "isbn", "coverUrl"] as const
   const patch: Partial<BookDraft> = {}
   for (const field of fields) {
@@ -104,7 +104,7 @@ export function mergeMissingFields(keep: Book, others: Book[]): Partial<BookDraf
   return patch
 }
 
-export function markDistinctPatches(group: Book[], chosen: Book[]): { id: string; patch: Partial<BookDraft> }[] {
+export const markDistinctPatches = (group: Book[], chosen: Book[]): { id: string; patch: Partial<BookDraft> }[] => {
   const chosenIds = new Set(chosen.map((b) => b.id))
   return group.map((book) => {
     const against = chosenIds.has(book.id) ? group.filter((o) => o.id !== book.id) : chosen

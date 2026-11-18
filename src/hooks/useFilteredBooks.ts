@@ -3,7 +3,7 @@ import { filterBooks } from "@/lib/search"
 import { useFiltersStore } from "@/store/useFiltersStore"
 import { useLibraryStore } from "@/store/useLibraryStore"
 
-export function useFilteredBooks() {
+export const useFilteredBooks = () => {
   const books = useLibraryStore((s) => s.books)
 
   const text = useDeferredValue(useFiltersStore((s) => s.text))

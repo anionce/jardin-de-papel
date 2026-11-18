@@ -9,7 +9,7 @@ const OPEN_LIBRARY_TIMEOUT_MS = 6000
 
 let googleQuotaHit = false
 
-function checkGoogleQuota(res: Response) {
+const checkGoogleQuota = (res: Response) => {
   if (res.status !== 429) return
   googleQuotaHit = true
   throw new CoverQuotaError("Google Books: cuota diaria agotada")
@@ -21,7 +21,7 @@ const secureThumbnail = (url: string) => url.replace(/^http:/, "https:").replace
 
 const preferredIsbn = (isbns: string[] = []) => isbns.find((i) => i.length === 13) ?? isbns[0]
 
-function titleMatches(doc: OpenLibraryDoc, wanted: string): boolean {
+const titleMatches = (doc: OpenLibraryDoc, wanted: string): boolean => {
   return titleKey(doc.title) === wanted || Boolean(doc.editions?.docs?.some((e) => titleKey(e.title) === wanted))
 }
 
@@ -39,7 +39,7 @@ export const WORK_LOOKUP_VERSION = 3
 
 export const TRUSTED_WORK_VERSION = 2
 
-async function googleThumbnails(query: string, maxResults = 5): Promise<string[]> {
+const googleThumbnails = async (query: string, maxResults = 5): Promise<string[]> => {
   const params = new URLSearchParams({ q: query, maxResults: String(maxResults), fields: "items(volumeInfo/imageLinks)" })
   if (GOOGLE_BOOKS_KEY) params.set("key", GOOGLE_BOOKS_KEY)
   const res = await fetch(`https://www.googleapis.com/books/v1/volumes?${params}`)
@@ -52,7 +52,7 @@ async function googleThumbnails(query: string, maxResults = 5): Promise<string[]
   })
 }
 
-async function openLibraryDoc(book: LookupInput): Promise<OpenLibraryDoc | undefined> {
+const openLibraryDoc = async (book: LookupInput): Promise<OpenLibraryDoc | undefined> => {
   const search = async (params: Record<string, string>) => {
     const query = new URLSearchParams({
       ...params,
@@ -86,10 +86,7 @@ export interface LookupResult {
   coverComplete: boolean
 }
 
-export async function lookupBook(
-  book: LookupInput,
-  options: { cover: boolean }
-): Promise<LookupResult> {
+export const lookupBook = async (book: LookupInput, options: { cover: boolean }): Promise<LookupResult> => {
   const doc = await openLibraryDoc(book).catch(() => undefined)
   const result: LookupResult = { workKey: doc?.key, pages: doc?.number_of_pages_median, coverComplete: true }
   if (!options.cover) return result
@@ -124,9 +121,7 @@ export interface EditionMatch {
   isbn?: string
 }
 
-export async function findEdition(
-  book: Pick<Book, "title" | "author" | "publisher">
-): Promise<EditionMatch | undefined> {
+export const findEdition = async (book: Pick<Book, "title" | "author" | "publisher">): Promise<EditionMatch | undefined> => {
   if (!book.title || !book.publisher) return undefined
   const params = new URLSearchParams({
     q: cleanTitle(book.title),
@@ -160,7 +155,7 @@ interface OpenLibraryEdition {
   languages?: { key: string }[]
 }
 
-async function coverWorkKeys(book: Pick<Book, "title" | "author" | "isbn">): Promise<string[]> {
+const coverWorkKeys = async (book: Pick<Book, "title" | "author" | "isbn">): Promise<string[]> => {
   const doc = await openLibraryDoc(book).catch(() => undefined)
   if (doc?.key) return [doc.key]
   if (!book.title) return []
@@ -182,9 +177,7 @@ async function coverWorkKeys(book: Pick<Book, "title" | "author" | "isbn">): Pro
     .map((d) => d.key!)
 }
 
-export async function findCoverCandidates(
-  book: Pick<Book, "title" | "author" | "isbn" | "publisher" | "workKey">
-): Promise<string[]> {
+export const findCoverCandidates = async (book: Pick<Book, "title" | "author" | "isbn" | "publisher" | "workKey">): Promise<string[]> => {
   const first: string[] = []
   const last: string[] = []
   const title = book.title ? cleanTitle(book.title) : undefined
@@ -253,12 +246,12 @@ interface GoogleVolume {
   }
 }
 
-function parseYear(date?: string | number): number | undefined {
+const parseYear = (date?: string | number): number | undefined => {
   const year = parseInt(String(date ?? ""), 10)
   return Number.isFinite(year) ? year : undefined
 }
 
-async function googleSuggestions(title: string, author: string, signal: AbortSignal): Promise<BookSuggestion[]> {
+const googleSuggestions = async (title: string, author: string, signal: AbortSignal): Promise<BookSuggestion[]> => {
   const q = [title && `intitle:${title}`, author && `inauthor:${author}`].filter(Boolean).join(" ")
   const params = new URLSearchParams({
     q,
@@ -290,7 +283,7 @@ async function googleSuggestions(title: string, author: string, signal: AbortSig
   })
 }
 
-function asPrefix(text: string): string {
+const asPrefix = (text: string): string => {
   const clean = text.replace(/[:"()[\]{}^~*?\\/!+-]/g, " ").replace(/\s+/g, " ").trim()
   if (/(^|\s)\p{L}{4,}$/u.test(clean)) return `${clean}*`
 
@@ -310,12 +303,7 @@ interface OpenLibrarySuggestionDoc {
   }
 }
 
-async function openLibrarySuggestions(
-  title: string,
-  author: string,
-  signal: AbortSignal,
-  prefix: boolean
-): Promise<BookSuggestion[]> {
+const openLibrarySuggestions = async (title: string, author: string, signal: AbortSignal, prefix: boolean): Promise<BookSuggestion[]> => {
   const params = new URLSearchParams({
     fields:
       "key,title,author_name,first_publish_year,number_of_pages_median,cover_i,editions,editions.title,editions.publisher,editions.isbn,editions.publish_date,editions.cover_i",
@@ -355,13 +343,13 @@ async function openLibrarySuggestions(
   })
 }
 
-function fixInvertedArticle(title: string): string {
+const fixInvertedArticle = (title: string): string => {
   const fixed = title.replace(/^(.+),\s*(el|la|los|las|lo|un|una|the|a|an)$/i, "$2 $1")
 
   return fixed.charAt(0).toLocaleUpperCase("es") + fixed.slice(1)
 }
 
-function matchesTypedTitle(typed: string, suggestion: BookSuggestion): boolean {
+const matchesTypedTitle = (typed: string, suggestion: BookSuggestion): boolean => {
   const words = titleKey(typed).split(" ").filter((w) => w.length >= 3)
   if (words.length === 0) return true
   const last = words.pop()!
@@ -376,7 +364,7 @@ const MAX_SUGGESTIONS = 6
 
 const firstAuthorKey = (s: BookSuggestion) => authorKey(s.author?.split(",")[0])
 
-function dedupeSuggestions(list: BookSuggestion[]): BookSuggestion[] {
+const dedupeSuggestions = (list: BookSuggestion[]): BookSuggestion[] => {
   const result: BookSuggestion[] = []
   for (const s of list) {
     const key = titleKey(s.title)
@@ -403,11 +391,7 @@ const suggestionCache = new Map<string, BookSuggestion[]>()
 const withTimeout = <T,>(promise: Promise<T>, ms: number) =>
   Promise.race([promise, new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), ms))])
 
-export async function searchBookSuggestions(
-  input: { title: string; author: string },
-  signal: AbortSignal,
-  onPartial?: (books: BookSuggestion[]) => void
-): Promise<BookSuggestion[]> {
+export const searchBookSuggestions = async (input: { title: string; author: string }, signal: AbortSignal, onPartial?: (books: BookSuggestion[]) => void): Promise<BookSuggestion[]> => {
   const title = input.title.trim()
   const author = input.author.trim()
   const cacheKey = `${normalize(title)}|${normalize(author)}`

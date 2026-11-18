@@ -10,7 +10,7 @@ import { useSelectionStore } from "@/store/useSelectionStore"
 
 const ARCH_COLORS = ["bg-blush/70", "bg-mustard/35", "bg-sage/45", "bg-coral/35", "bg-secondary"]
 
-export const BookCard = memo(function BookCard({ book }: { book: Book }) {
+export const BookCard = memo(({ book }: { book: Book }) => {
   const openEdit = useBookFormStore((s) => s.openEdit)
   const selecting = useSelectionStore((s) => s.active)
   const selected = useSelectionStore((s) => s.ids.has(book.id))

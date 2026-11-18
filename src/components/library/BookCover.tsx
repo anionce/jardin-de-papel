@@ -12,13 +12,13 @@ const COVER_STYLES = [
   { bg: "#F3E2CC", fg: "var(--burgundy)", flower: "var(--sage)" },
 ]
 
-function coverSource(book: Book): string | undefined {
+const coverSource = (book: Book): string | undefined => {
   if (book.coverUrl) return book.coverUrl
   if (book.isbn && !book.coverChecked) return `https://covers.openlibrary.org/b/isbn/${book.isbn}-M.jpg?default=false`
   return undefined
 }
 
-export function BookCover({ book, className }: { book: Book; className?: string }) {
+export const BookCover = ({ book, className }: { book: Book; className?: string }) => {
   const src = coverSource(book)
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
 

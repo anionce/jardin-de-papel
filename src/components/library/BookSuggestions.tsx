@@ -9,7 +9,7 @@ interface Props {
   onClose: () => void
 }
 
-export function BookSuggestions({ loading, suggestions, onPick, onClose }: Props) {
+export const BookSuggestions = ({ loading, suggestions, onPick, onClose }: Props) => {
   return (
     <div className="rounded-2xl border border-border bg-card p-2 sm:col-span-2">
       <div className="flex items-center justify-between gap-2 px-2 py-1">

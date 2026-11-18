@@ -14,7 +14,7 @@ import { useFiltersStore } from "@/store/useFiltersStore"
 import { useLibraryStore } from "@/store/useLibraryStore"
 import { useSelectionStore } from "@/store/useSelectionStore"
 
-export function LibraryPage() {
+export const LibraryPage = () => {
   const { books, loaded, error } = useLibraryStore()
   const filtered = useFilteredBooks()
   const genres = useMemo(() => uniqueGenres(books), [books])

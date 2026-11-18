@@ -12,17 +12,17 @@ interface Props {
   className?: string
 }
 
-export function GenresInput({ value, onChange, options, placeholder = "Añade un género…", className }: Props) {
+export const GenresInput = ({ value, onChange, options, placeholder = "Añade un género…", className }: Props) => {
   const [draft, setDraft] = useState("")
   const listId = useId()
 
-  function add(text = draft) {
+  const add = (text = draft) => {
     const next = cleanGenres([...value, ...text.split(",")])
     if (next.length !== value.length) onChange(next)
     setDraft("")
   }
 
-  function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault()
       add()

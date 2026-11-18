@@ -1,11 +1,11 @@
 import { normalize } from "@/lib/text"
 import type { Book } from "@/lib/types"
 
-export function bookGenres(book: Pick<Book, "genres">): string[] {
+export const bookGenres = (book: Pick<Book, "genres">): string[] => {
   return book.genres ?? []
 }
 
-export function cleanGenres(genres: string[]): string[] {
+export const cleanGenres = (genres: string[]): string[] => {
   const seen = new Set<string>()
   const result: string[] = []
   for (const raw of genres) {
@@ -18,26 +18,26 @@ export function cleanGenres(genres: string[]): string[] {
   return result
 }
 
-export function genresPatch(genres: string[]): string[] | undefined {
+export const genresPatch = (genres: string[]): string[] | undefined => {
   const cleaned = cleanGenres(genres)
   return cleaned.length > 0 ? cleaned : undefined
 }
 
 const sameGenre = (a: string, b: string) => normalize(a) === normalize(b)
 
-export function hasGenre(book: Pick<Book, "genres">, genre: string): boolean {
+export const hasGenre = (book: Pick<Book, "genres">, genre: string): boolean => {
   return bookGenres(book).some((g) => sameGenre(g, genre))
 }
 
-export function addGenre(book: Pick<Book, "genres">, genre: string): string[] | undefined {
+export const addGenre = (book: Pick<Book, "genres">, genre: string): string[] | undefined => {
   return genresPatch([...bookGenres(book), genre])
 }
 
-export function removeGenre(book: Pick<Book, "genres">, genre: string): string[] | undefined {
+export const removeGenre = (book: Pick<Book, "genres">, genre: string): string[] | undefined => {
   return genresPatch(bookGenres(book).filter((g) => !sameGenre(g, genre)))
 }
 
-export function renameGenre(book: Pick<Book, "genres">, from: string, to: string): string[] | undefined {
+export const renameGenre = (book: Pick<Book, "genres">, from: string, to: string): string[] | undefined => {
   return genresPatch(bookGenres(book).map((g) => (g === from ? to : g)))
 }
 
@@ -48,7 +48,7 @@ export interface GenreUsage {
 
 const collator = new Intl.Collator("es", { sensitivity: "base" })
 
-export function genreUsage(books: Book[]): { rows: GenreUsage[]; withoutGenre: number } {
+export const genreUsage = (books: Book[]): { rows: GenreUsage[]; withoutGenre: number } => {
   const byGenre = new Map<string, string[]>()
   let withoutGenre = 0
   for (const book of books) {

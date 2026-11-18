@@ -3,7 +3,7 @@ import { Flower } from "@/components/decor/Flower"
 import { Button } from "@/components/ui/button"
 import { useBookFormStore } from "@/store/useBookFormStore"
 
-export function EmptyLibrary() {
+export const EmptyLibrary = () => {
   const openNew = useBookFormStore((s) => s.openNew)
   return (
     <div className="relative mx-auto max-w-xl overflow-hidden rounded-[1.75rem] bg-coral px-8 py-10 text-center text-on-color">

@@ -9,7 +9,7 @@ import { markDistinctPatches, mergeMissingFields, type DuplicateGroup } from "@/
 import { cn } from "@/lib/utils"
 import type { Book } from "@/lib/types"
 
-export function DuplicatesPage() {
+export const DuplicatesPage = () => {
   const groups = useDuplicateGroups()
 
   return (
@@ -36,13 +36,13 @@ export function DuplicatesPage() {
   )
 }
 
-function GroupCard({ group }: { group: DuplicateGroup }) {
+const GroupCard = ({ group }: { group: DuplicateGroup }) => {
   const [busy, setBusy] = useState(false)
 
   const [keepId, setKeepId] = useState<string | null>(null)
   const others = group.books.filter((b) => b.id !== keepId)
 
-  async function run(action: () => Promise<void>) {
+  const run = async (action: () => Promise<void>) => {
     setBusy(true)
     try {
       await action()
@@ -123,7 +123,7 @@ interface BookOptionProps {
   onNotDuplicate?: () => void
 }
 
-function BookOption({ book, disabled, selected, onKeep, onNotDuplicate }: BookOptionProps) {
+const BookOption = ({ book, disabled, selected, onKeep, onNotDuplicate }: BookOptionProps) => {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const details = [book.year, book.publisher, book.genres?.join(", ")].filter(Boolean).join(" · ")
 

@@ -7,7 +7,7 @@ import { useBookFormStore } from "@/store/useBookFormStore"
 import { makeBook } from "@/test/factories"
 import { renderWithShelf } from "@/test/render"
 
-function storedBooks(): Book[] {
+const storedBooks = (): Book[] => {
   let books: Book[] = []
   subscribeBooks(
     (next) => (books = next),

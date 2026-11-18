@@ -1,6 +1,6 @@
 import { Squiggle } from "@/components/decor/Flower"
 
-export function Footer() {
+export const Footer = () => {
   return (
     <footer
       className="scallop-top mt-14 rounded-b-[2rem] bg-burgundy px-6 pt-9 pb-8 text-center text-on-color [--scallop:var(--burgundy)]"

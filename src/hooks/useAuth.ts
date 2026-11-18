@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { onAuthStateChanged, signInWithPopup, signOut, type User } from "firebase/auth"
 import { auth, googleProvider, isFirebaseConfigured } from "@/lib/firebase"
 
-export function useAuth() {
+export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null)
 
   const [loading, setLoading] = useState(isFirebaseConfigured)

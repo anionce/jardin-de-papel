@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils"
 
-export function BookStack({ className }: { className?: string }) {
+export const BookStack = ({ className }: { className?: string }) => {
   return (
     <svg viewBox="0 0 240 230" aria-hidden="true" className={cn("pointer-events-none", className)}>
 
@@ -39,7 +39,7 @@ export function BookStack({ className }: { className?: string }) {
   )
 }
 
-function Petals({ color, center = "var(--mustard)" }: { color: string; center?: string }) {
+const Petals = ({ color, center = "var(--mustard)" }: { color: string; center?: string }) => {
   return (
     <>
       {Array.from({ length: 5 }, (_, i) => (

@@ -17,7 +17,7 @@ const COLLECTION = "books"
 const BATCH_LIMIT = 500
 const LOCAL_KEY = "biblioteca-books"
 
-function currentOwner(): string {
+const currentOwner = (): string => {
   const email = auth?.currentUser?.email
   if (!email) throw new Error("Hay que entrar con Google")
   return email
@@ -25,7 +25,7 @@ function currentOwner(): string {
 
 type Listener = (books: Book[]) => void
 
-function fromStored(data: Omit<Book, "id">, id: string): Book {
+const fromStored = (data: Omit<Book, "id">, id: string): Book => {
   const { genre, ...rest } = data
   const genres = rest.genres?.length ? rest.genres : genre ? [genre] : undefined
   return { ...rest, genres, id }
@@ -33,7 +33,7 @@ function fromStored(data: Omit<Book, "id">, id: string): Book {
 
 const localListeners = new Set<Listener>()
 
-function readLocal(): Book[] {
+const readLocal = (): Book[] => {
   try {
     return (JSON.parse(localStorage.getItem(LOCAL_KEY) ?? "[]") as Book[]).map((b) => fromStored(b, b.id))
   } catch {
@@ -41,12 +41,12 @@ function readLocal(): Book[] {
   }
 }
 
-function writeLocal(books: Book[]) {
+const writeLocal = (books: Book[]) => {
   localStorage.setItem(LOCAL_KEY, JSON.stringify(books))
   localListeners.forEach((listener) => listener(books))
 }
 
-export function subscribeBooks(onChange: Listener, onError: (error: Error) => void): () => void {
+export const subscribeBooks = (onChange: Listener, onError: (error: Error) => void): () => void => {
   if (!firestore) {
     localListeners.add(onChange)
     onChange(readLocal())
@@ -69,7 +69,7 @@ export function subscribeBooks(onChange: Listener, onError: (error: Error) => vo
 
 type BookPatch = { id: string; patch: Partial<BookDraft> }
 
-async function commitInBatches<T>(items: T[], write: (batch: WriteBatch, item: T) => void) {
+const commitInBatches = async <T>(items: T[], write: (batch: WriteBatch, item: T) => void) => {
   if (!firestore) return
   for (let i = 0; i < items.length; i += BATCH_LIMIT) {
     const batch = writeBatch(firestore)
@@ -78,11 +78,11 @@ async function commitInBatches<T>(items: T[], write: (batch: WriteBatch, item: T
   }
 }
 
-function currentUserName(): string | undefined {
+const currentUserName = (): string | undefined => {
   return auth?.currentUser?.displayName ?? undefined
 }
 
-export async function addBooks(drafts: BookDraft[]) {
+export const addBooks = async (drafts: BookDraft[]) => {
   const now = Date.now()
   const addedBy = currentUserName()
 
@@ -99,7 +99,7 @@ export async function addBooks(drafts: BookDraft[]) {
 
 export const addBook = (draft: BookDraft) => addBooks([draft])
 
-function toFirestorePatch(patch: Partial<BookDraft>) {
+const toFirestorePatch = (patch: Partial<BookDraft>) => {
   const data = Object.fromEntries(
     Object.entries(patch).map(([key, value]) => [key, value === undefined ? deleteField() : value])
   )
@@ -108,7 +108,7 @@ function toFirestorePatch(patch: Partial<BookDraft>) {
   return data
 }
 
-export async function updateEachBook(patches: BookPatch[]) {
+export const updateEachBook = async (patches: BookPatch[]) => {
   if (patches.length === 0) return
   if (!firestore) {
     const byId = new Map(patches.map((p) => [p.id, p.patch]))
@@ -123,7 +123,7 @@ export const updateBooks = (ids: string[], patch: Partial<BookDraft>) => updateE
 
 export const updateBook = (id: string, patch: Partial<BookDraft>) => updateEachBook([{ id, patch }])
 
-export async function claimUnownedBooks(): Promise<number> {
+export const claimUnownedBooks = async (): Promise<number> => {
   const user = auth?.currentUser
   if (!firestore || !user?.email || !user.displayName) return 0
   const snapshot = await getDocs(collection(firestore, COLLECTION))
@@ -135,7 +135,7 @@ export async function claimUnownedBooks(): Promise<number> {
   return mine.length
 }
 
-export async function removeBooks(ids: string[]) {
+export const removeBooks = async (ids: string[]) => {
   if (ids.length === 0) return
   if (!firestore) {
     const idSet = new Set(ids)

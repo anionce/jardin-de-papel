@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { addBook, addBooks, removeBook, removeBooks, subscribeBooks, updateBook, updateBooks } from "@/lib/db"
 import type { Book } from "@/lib/types"
 
-function latestBooks() {
+const latestBooks = () => {
   let books: Book[] = []
   const unsubscribe = subscribeBooks(
     (next) => (books = next),

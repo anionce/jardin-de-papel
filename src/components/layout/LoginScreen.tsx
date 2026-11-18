@@ -2,7 +2,7 @@ import { Flower, Stem } from "@/components/decor/Flower"
 import { BookStack } from "@/components/decor/BookStack"
 import { Button } from "@/components/ui/button"
 
-export function LoginScreen({ onSignIn }: { onSignIn: () => void }) {
+export const LoginScreen = ({ onSignIn }: { onSignIn: () => void }) => {
   return (
     <div className="relative flex min-h-svh items-center justify-center overflow-hidden px-5">
       <Stem className="absolute -bottom-6 left-[6%] h-64 opacity-90" />

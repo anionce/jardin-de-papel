@@ -16,7 +16,7 @@ export interface FormValues {
   read: boolean
 }
 
-export function toValues(book: Book | null): FormValues {
+export const toValues = (book: Book | null): FormValues => {
   return {
     title: book?.title ?? "",
     author: book?.author ?? "",
@@ -31,7 +31,7 @@ export function toValues(book: Book | null): FormValues {
   }
 }
 
-export function toDraft(values: FormValues): BookDraft {
+export const toDraft = (values: FormValues): BookDraft => {
   const text = (v: string) => v.trim() || undefined
   const year = parseInt(values.year, 10)
   const pages = parseInt(values.pages, 10)
@@ -49,7 +49,7 @@ export function toDraft(values: FormValues): BookDraft {
   }
 }
 
-export function applySuggestion(values: FormValues, s: BookSuggestion): FormValues {
+export const applySuggestion = (values: FormValues, s: BookSuggestion): FormValues => {
   return {
     ...values,
     title: s.title,
@@ -63,11 +63,11 @@ export function applySuggestion(values: FormValues, s: BookSuggestion): FormValu
   }
 }
 
-export function identityChanged(editing: Book | null, draft: BookDraft): boolean {
+export const identityChanged = (editing: Book | null, draft: BookDraft): boolean => {
   if (!editing) return true
   return draft.title !== editing.title || draft.author !== editing.author || draft.isbn !== editing.isbn
 }
 
-export function coverSearchKey(draft: BookDraft): string {
+export const coverSearchKey = (draft: BookDraft): string => {
   return [draft.title, draft.author, draft.publisher, draft.isbn].map((v) => normalize(v ?? "")).join("|")
 }

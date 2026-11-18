@@ -5,7 +5,7 @@ import { ImportPage } from "@/pages/ImportPage"
 import { GenresPage } from "@/pages/GenresPage"
 import { DuplicatesPage } from "@/pages/DuplicatesPage"
 
-export function App() {
+export const App = () => {
   return (
     <Routes>
       <Route element={<AppShell />}>

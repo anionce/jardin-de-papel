@@ -1,7 +1,7 @@
 import { Squiggle } from "@/components/decor/Flower"
 import type { Book } from "@/lib/types"
 
-export function StatsBand({ books }: { books: Book[] }) {
+export const StatsBand = ({ books }: { books: Book[] }) => {
   const read = books.filter((b) => b.read).length
   const authors = new Set(books.map((b) => b.author?.trim().toLowerCase()).filter(Boolean)).size
   const pagesRead = books.reduce((sum, b) => sum + (b.read && b.pages ? b.pages : 0), 0)

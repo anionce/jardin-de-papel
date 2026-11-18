@@ -7,7 +7,7 @@ interface FlowerProps {
   className?: string
 }
 
-export function Flower({ petal = "var(--paper)", center = "var(--mustard)", petals = 5, className }: FlowerProps) {
+export const Flower = ({ petal = "var(--paper)", center = "var(--mustard)", petals = 5, className }: FlowerProps) => {
   return (
     <svg viewBox="0 0 100 100" aria-hidden="true" className={cn("pointer-events-none", className)}>
       {Array.from({ length: petals }, (_, i) => (
@@ -26,7 +26,7 @@ export function Flower({ petal = "var(--paper)", center = "var(--mustard)", peta
   )
 }
 
-export function Stem({ className, color = "var(--sage-deep)" }: { className?: string; color?: string }) {
+export const Stem = ({ className, color = "var(--sage-deep)" }: { className?: string; color?: string }) => {
   return (
     <svg viewBox="0 0 80 200" aria-hidden="true" className={cn("pointer-events-none", className)}>
       <path d="M40 200 C 38 140, 44 90, 40 20" stroke={color} strokeWidth="5" fill="none" strokeLinecap="round" />
@@ -36,7 +36,7 @@ export function Stem({ className, color = "var(--sage-deep)" }: { className?: st
   )
 }
 
-export function Squiggle({ className, color = "currentColor" }: { className?: string; color?: string }) {
+export const Squiggle = ({ className, color = "currentColor" }: { className?: string; color?: string }) => {
   return (
     <svg viewBox="0 0 60 10" aria-hidden="true" className={cn("h-2.5 w-14", className)}>
       <path

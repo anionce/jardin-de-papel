@@ -34,7 +34,7 @@ const FULL_WIDTH = new Set<TextField>(["title", "author", "publisher", "isbn"])
 
 const DATALISTS: Partial<Record<TextField, string>> = { publisher: "publisher-options" }
 
-export function BookFormDialog() {
+export const BookFormDialog = () => {
   const { open, editing, close } = useBookFormStore()
 
   return (
@@ -52,7 +52,7 @@ export function BookFormDialog() {
   )
 }
 
-function BookForm({ editing, onDone }: { editing: Book | null; onDone: () => void }) {
+const BookForm = ({ editing, onDone }: { editing: Book | null; onDone: () => void }) => {
   const books = useLibraryStore((s) => s.books)
   const genres = useMemo(() => uniqueGenres(books), [books])
   const publishers = useMemo(() => uniquePublishers(books), [books])
@@ -73,7 +73,7 @@ function BookForm({ editing, onDone }: { editing: Book | null; onDone: () => voi
     }
   }
 
-  function pickSuggestion(suggestion: BookSuggestion) {
+  const pickSuggestion = (suggestion: BookSuggestion) => {
     setValues((v) => applySuggestion(v, suggestion))
     setSimilar(null)
     setLookupEnabled(false)
@@ -82,13 +82,13 @@ function BookForm({ editing, onDone }: { editing: Book | null; onDone: () => voi
 
   const preview: Book = { ...toDraft(values), id: editing?.id ?? "nuevo", coverChecked: true, createdAt: 0 }
 
-  function handleUpload(e: ChangeEvent<HTMLInputElement>) {
+  const handleUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ""
     if (file) void cover.uploadCover(file)
   }
 
-  async function handleSubmit(e: FormEvent) {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     const draft = toDraft(values)
     const isNewIdentity = identityChanged(editing, draft)
@@ -114,7 +114,7 @@ function BookForm({ editing, onDone }: { editing: Book | null; onDone: () => voi
     }
   }
 
-  async function handleDelete() {
+  const handleDelete = async () => {
     if (!editing) return
     if (!confirmDelete) {
       setConfirmDelete(true)

@@ -18,7 +18,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? "text-burgundy underline decoration-2 underline-offset-6" : "text-muted-foreground hover:text-foreground"
   )
 
-export function Header({ onSignOut }: { onSignOut?: () => void }) {
+export const Header = ({ onSignOut }: { onSignOut?: () => void }) => {
   const openNew = useBookFormStore((s) => s.openNew)
   const count = useLibraryStore((s) => s.books.length)
   const duplicateCount = useDuplicateGroups().length

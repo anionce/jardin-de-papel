@@ -15,17 +15,17 @@ const NON_GENRE_SHELVES = new Set([
   "re-read", "reread", "borrowed", "physical", "paperback", "hardcover",
 ])
 
-function toYear(value: string | undefined): number | undefined {
+const toYear = (value: string | undefined): number | undefined => {
   const n = parseInt((value ?? "").replace(/[^\d]/g, ""), 10)
   return Number.isFinite(n) && n > 0 ? n : undefined
 }
 
-function cleanIsbn(raw: string | undefined): string | undefined {
+const cleanIsbn = (raw: string | undefined): string | undefined => {
   const digits = (raw ?? "").replace(/[^0-9Xx]/g, "")
   return digits.length >= 10 ? digits : undefined
 }
 
-function pickGenres(raw: string | undefined): string[] | undefined {
+const pickGenres = (raw: string | undefined): string[] | undefined => {
   const genres = (raw ?? "")
     .split(",")
     .map((s) => s.trim().toLowerCase())
@@ -37,12 +37,12 @@ function pickGenres(raw: string | undefined): string[] | undefined {
   return genres.length > 0 ? [...new Set(genres)] : undefined
 }
 
-function clean(value: string | undefined): string | undefined {
+const clean = (value: string | undefined): string | undefined => {
   const trimmed = value?.trim()
   return trimmed ? trimmed : undefined
 }
 
-function mapRow(row: Record<string, string>): BookDraft | null {
+const mapRow = (row: Record<string, string>): BookDraft | null => {
   const title = clean(row["Title"])
   const author = clean(row["Author"])
   if (!title && !author) return null
@@ -60,7 +60,7 @@ function mapRow(row: Record<string, string>): BookDraft | null {
   }
 }
 
-export function parseGoodreadsCsv(file: File): Promise<GoodreadsImport> {
+export const parseGoodreadsCsv = (file: File): Promise<GoodreadsImport> => {
   return new Promise((resolve, reject) => {
     Papa.parse<Record<string, string>>(file, {
       header: true,
@@ -91,7 +91,7 @@ export interface ImportPlan {
   similar: number
 }
 
-export function planImport(parsed: GoodreadsImport, existing: Book[], onlyRead: boolean): ImportPlan {
+export const planImport = (parsed: GoodreadsImport, existing: Book[], onlyRead: boolean): ImportPlan => {
   const candidates = onlyRead ? parsed.books.filter((b) => b.read) : parsed.books
   const keysOf = (b: Pick<Book, "title" | "author" | "goodreadsId">) => [bookKey(b), bookKey({ ...b, goodreadsId: undefined })]
   const known = new Set(existing.flatMap(keysOf))

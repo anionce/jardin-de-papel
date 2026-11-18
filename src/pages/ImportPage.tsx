@@ -19,7 +19,7 @@ const EMPTY_PLAN: ImportPlan = { fresh: [], duplicates: 0, unreadSkipped: 0, sim
 
 const PREVIEW_LIMIT = 200
 
-export function ImportPage() {
+export const ImportPage = () => {
   const navigate = useNavigate()
   const books = useLibraryStore((s) => s.books)
   const [parsed, setParsed] = useState<GoodreadsImport | null>(null)
@@ -34,7 +34,7 @@ export function ImportPage() {
     [parsed, books, onlyRead]
   )
 
-  async function handleFile(file: File | undefined) {
+  const handleFile = async (file: File | undefined) => {
     if (!file) return
     setError(null)
     setParsed(null)
@@ -46,13 +46,13 @@ export function ImportPage() {
     }
   }
 
-  function handleDrop(e: DragEvent) {
+  const handleDrop = (e: DragEvent) => {
     e.preventDefault()
     setDragging(false)
     handleFile(e.dataTransfer.files[0])
   }
 
-  async function handleImport() {
+  const handleImport = async () => {
     setImporting(true)
     try {
       await addBooks(fresh)

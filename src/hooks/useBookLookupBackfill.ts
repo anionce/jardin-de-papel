@@ -14,7 +14,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const needsCover = (b: Book) => !b.coverUrl && !b.coverChecked
 const needsWork = (b: Book) => b.workVersion !== WORK_LOOKUP_VERSION
 
-export function useBookLookupBackfill(enabled: boolean) {
+export const useBookLookupBackfill = (enabled: boolean) => {
   const books = useLibraryStore((s) => s.books)
   const running = useRef(false)
   const attempted = useRef(new Set<string>())

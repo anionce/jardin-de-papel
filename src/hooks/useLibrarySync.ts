@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { claimUnownedBooks, subscribeBooks } from "@/lib/db"
 import { useLibraryStore } from "@/store/useLibraryStore"
 
-export function useLibrarySync(enabled: boolean) {
+export const useLibrarySync = (enabled: boolean) => {
   const setBooks = useLibraryStore((s) => s.setBooks)
   const setError = useLibraryStore((s) => s.setError)
 

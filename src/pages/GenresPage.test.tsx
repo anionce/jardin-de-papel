@@ -6,12 +6,12 @@ import { GenresPage } from "@/pages/GenresPage"
 import { makeBook } from "@/test/factories"
 import { renderWithShelf } from "@/test/render"
 
-function seedShelf(books: Book[]): Book[] {
+const seedShelf = (books: Book[]): Book[] => {
   localStorage.setItem("biblioteca-books", JSON.stringify(books))
   return books
 }
 
-function storedBooks(): Book[] {
+const storedBooks = (): Book[] => {
   let books: Book[] = []
   subscribeBooks(
     (next) => (books = next),
