@@ -1,0 +1,150 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'DM Sans', -apple-system, sans-serif;
+  --font-serif: 'Fraunces', Georgia, serif;
+  --font-hand: 'Caveat', cursive;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Paleta "cerámica": burdeos, salvia, rosa, coral, mostaza sobre crema. */
+  --color-canvas: var(--canvas);
+  --color-paper: var(--paper);
+  --color-burgundy: var(--burgundy);
+  --color-sage: var(--sage);
+  --color-sage-deep: var(--sage-deep);
+  --color-blush: var(--blush);
+  --color-coral: var(--coral);
+  --color-mustard: var(--mustard);
+  --color-on-color: var(--on-color);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-full: 999px;
+}
+
+:root {
+  --canvas: #A9BEA3;
+  --paper: #FBF5EA;
+  --burgundy: #7A2E3A;
+  --sage: #8FA986;
+  --sage-deep: #4F6E4B;
+  --blush: #EBC3BD;
+  --coral: #D9786B;
+  --mustard: #E5B54A;
+  --on-color: #FBF5EA;
+
+  --background: var(--paper);
+  --foreground: #3B2226;
+  --card: #F4EADB;
+  --card-foreground: #3B2226;
+  --popover: var(--paper);
+  --popover-foreground: #3B2226;
+  --primary: var(--burgundy);
+  --primary-foreground: #FBF5EA;
+  --secondary: #EFE4D2;
+  --secondary-foreground: #3B2226;
+  --muted: #EFE4D2;
+  --muted-foreground: #7D6560;
+  --accent: #F3DAD5;
+  --accent-foreground: #7A2E3A;
+  --destructive: #B04A36;
+  --destructive-foreground: #FBF5EA;
+  --border: #E2D3BF;
+  --input: #DCCBB4;
+  --ring: #7A2E3A;
+  --radius: 0.9rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --canvas: #1F2620;
+    --paper: #2A2224;
+    --burgundy: #8E3E4A;
+    --sage: #5F7A58;
+    --sage-deep: #A9C79F;
+    --blush: #6B4A4C;
+    --coral: #A85D52;
+    --mustard: #B78F35;
+    --on-color: #FBF2E6;
+
+    --foreground: #F3E7DC;
+    --card: #342A2C;
+    --card-foreground: #F3E7DC;
+    --popover-foreground: #F3E7DC;
+    --primary: #E3A3AE;
+    --primary-foreground: #2A2224;
+    --secondary: #3A2F31;
+    --secondary-foreground: #F3E7DC;
+    --muted: #3A2F31;
+    --muted-foreground: #C7B1A9;
+    --accent: #4A3336;
+    --accent-foreground: #F0BCC4;
+    --destructive: #E08A72;
+    --destructive-foreground: #2A2224;
+    --border: #473A3B;
+    --input: #514244;
+    --ring: #E3A3AE;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-canvas text-foreground font-sans antialiased;
+  }
+}
+
+/* Borde festoneado (como los platos del diseño de referencia). El color sale
+   de --scallop, que cada bloque fija a su propio fondo. */
+@utility scallop-bottom {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: -13px;
+    height: 14px;
+    background: radial-gradient(circle at 14px 0, var(--scallop) 13px, transparent 13.5px) repeat-x;
+    background-size: 28px 14px;
+  }
+}
+@utility scallop-top {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: -13px;
+    height: 14px;
+    background: radial-gradient(circle at 14px 14px, var(--scallop) 13px, transparent 13.5px) repeat-x;
+    background-size: 28px 14px;
+  }
+}
