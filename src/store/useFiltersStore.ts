@@ -33,8 +33,6 @@ export const useFiltersStore = create<FiltersState>()(
     }),
     {
       name: "biblioteca-filters",
-      // v1: el orden pasó de "title" a "title-asc"/"title-desc".
-      // v2: de un género (`genre`) a varios (`genres`).
       version: 2,
       migrate: (persisted, version) => {
         const old = persisted as Partial<FiltersState> & { genre?: string | null }
@@ -45,7 +43,6 @@ export const useFiltersStore = create<FiltersState>()(
           genres: rest.genres ?? (genre ? [genre] : []),
         } as FiltersState
       },
-      // El texto de búsqueda no se recuerda entre visitas; el orden sí.
       partialize: ({ read, genres, sort }) => ({ read, genres, sort }),
     }
   )

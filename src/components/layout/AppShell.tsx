@@ -30,7 +30,7 @@ export function AppShell() {
         </main>
         <Footer />
       </div>
-      <BookFormDialog addedBy={user?.displayName ?? undefined} />
+      <BookFormDialog />
     </div>
   )
 }

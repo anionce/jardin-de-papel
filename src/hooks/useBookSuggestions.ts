@@ -4,10 +4,6 @@ import { searchBookSuggestions, type BookSuggestion } from "@/lib/bookLookup"
 const MIN_CHARS = 3
 const DEBOUNCE_MS = 450
 
-/**
- * Busca libros mientras se escribe título/autor (con pausa, y cancelando la
- * búsqueda anterior). `loading` se deduce: hay consulta y aún no su resultado.
- */
 export function useBookSuggestions(title: string, author: string, enabled: boolean) {
   const [result, setResult] = useState<{ query: string; books: BookSuggestion[]; partial?: boolean }>({
     query: "",
@@ -41,7 +37,6 @@ export function useBookSuggestions(title: string, author: string, enabled: boole
   const current = query !== "" && result.query === query
   return {
     active: query !== "",
-    // Con resultados parciales ya se muestran, pero sigue "buscando".
     loading: query !== "" && (!current || Boolean(result.partial)),
     suggestions: current ? result.books : [],
   }

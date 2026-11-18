@@ -29,7 +29,6 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Paleta "cerámica": burdeos, salvia, rosa, coral, mostaza sobre crema. */
   --color-canvas: var(--canvas);
   --color-paper: var(--paper);
   --color-burgundy: var(--burgundy);
@@ -122,8 +121,6 @@
   }
 }
 
-/* Borde festoneado (como los platos del diseño de referencia). El color sale
-   de --scallop, que cada bloque fija a su propio fondo. */
 @utility scallop-bottom {
   position: relative;
   &::after {

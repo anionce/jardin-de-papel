@@ -3,7 +3,6 @@ import type { Book } from "@/lib/types"
 
 interface BookFormState {
   open: boolean
-  /** null = libro nuevo */
   editing: Book | null
   openNew: () => void
   openEdit: (book: Book) => void

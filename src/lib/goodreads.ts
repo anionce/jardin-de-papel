@@ -1,12 +1,13 @@
 import Papa from "papaparse"
-import type { BookDraft } from "@/lib/types"
+import { similarBooksFinder } from "@/lib/duplicates"
+import { bookKey } from "@/lib/search"
+import type { Book, BookDraft } from "@/lib/types"
 
 export interface GoodreadsImport {
   books: BookDraft[]
   skipped: number
 }
 
-// Estanterías de Goodreads que son estado/formato, no género.
 const NON_GENRE_SHELVES = new Set([
   "to-read", "currently-reading", "read", "owned", "own", "books-i-own", "owned-books",
   "favorites", "favourites", "favorite", "kindle", "ebook", "ebooks", "e-book", "audiobook",
@@ -19,13 +20,11 @@ function toYear(value: string | undefined): number | undefined {
   return Number.isFinite(n) && n > 0 ? n : undefined
 }
 
-/** Goodreads exporta los ISBN escapados para Excel: ="0439023483". */
 function cleanIsbn(raw: string | undefined): string | undefined {
   const digits = (raw ?? "").replace(/[^0-9Xx]/g, "")
   return digits.length >= 10 ? digits : undefined
 }
 
-/** "fantasy, science-fiction" → ["Fantasy", "Science fiction"]. Ignora estanterías que no son géneros. */
 function pickGenres(raw: string | undefined): string[] | undefined {
   const genres = (raw ?? "")
     .split(",")
@@ -83,4 +82,25 @@ export function parseGoodreadsCsv(file: File): Promise<GoodreadsImport> {
       error: (error) => reject(error),
     })
   })
+}
+
+export interface ImportPlan {
+  fresh: BookDraft[]
+  duplicates: number
+  unreadSkipped: number
+  similar: number
+}
+
+export function planImport(parsed: GoodreadsImport, existing: Book[], onlyRead: boolean): ImportPlan {
+  const candidates = onlyRead ? parsed.books.filter((b) => b.read) : parsed.books
+  const keysOf = (b: Pick<Book, "title" | "author" | "goodreadsId">) => [bookKey(b), bookKey({ ...b, goodreadsId: undefined })]
+  const known = new Set(existing.flatMap(keysOf))
+  const fresh = candidates.filter((b) => !keysOf(b).some((key) => known.has(key)))
+  const findSimilar = similarBooksFinder(existing)
+  return {
+    fresh,
+    duplicates: candidates.length - fresh.length,
+    unreadSkipped: parsed.books.length - candidates.length,
+    similar: fresh.filter((b) => findSimilar(b).length > 0).length,
+  }
 }

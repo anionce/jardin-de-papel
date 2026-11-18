@@ -4,8 +4,8 @@ import { Squiggle } from "@/components/decor/Flower"
 import { BookCover } from "@/components/library/BookCover"
 import { Button } from "@/components/ui/button"
 import { useDuplicateGroups } from "@/hooks/useDuplicateGroups"
-import { removeBook, removeBooks, updateBook } from "@/lib/db"
-import { mergeMissingFields, type DuplicateGroup } from "@/lib/duplicates"
+import { removeBook, removeBooks, updateBook, updateEachBook } from "@/lib/db"
+import { markDistinctPatches, mergeMissingFields, type DuplicateGroup } from "@/lib/duplicates"
 import { cn } from "@/lib/utils"
 import type { Book } from "@/lib/types"
 
@@ -38,32 +38,29 @@ export function DuplicatesPage() {
 
 function GroupCard({ group }: { group: DuplicateGroup }) {
   const [busy, setBusy] = useState(false)
-  /** Libro elegido para quedarse, a la espera de confirmar el borrado del resto. */
+
   const [keepId, setKeepId] = useState<string | null>(null)
   const others = group.books.filter((b) => b.id !== keepId)
 
-  async function confirmKeep() {
-    const book = group.books.find((b) => b.id === keepId)
-    if (!book) return
+  async function run(action: () => Promise<void>) {
     setBusy(true)
-    const patch = mergeMissingFields(book, others)
-    if (Object.keys(patch).length > 0) await updateBook(book.id, patch)
-    await removeBooks(others.map((o) => o.id))
+    try {
+      await action()
+    } finally {
+      setBusy(false)
+    }
   }
 
-  /** Marca `books` como distintos de todos los demás del grupo. */
-  async function markDistinct(books: Book[]) {
-    setBusy(true)
-    const ids = new Set(books.map((b) => b.id))
-    await Promise.all(
-      group.books.map((b) => {
-        const against = ids.has(b.id) ? group.books.filter((o) => o.id !== b.id) : books
-        const distinctFrom = [...new Set([...(b.distinctFrom ?? []), ...against.map((o) => o.id)])]
-        return updateBook(b.id, { distinctFrom })
-      })
-    )
-    setBusy(false)
-  }
+  const confirmKeep = () =>
+    run(async () => {
+      const book = group.books.find((b) => b.id === keepId)
+      if (!book) return
+      const patch = mergeMissingFields(book, others)
+      if (Object.keys(patch).length > 0) await updateBook(book.id, patch)
+      await removeBooks(others.map((o) => o.id))
+    })
+
+  const markDistinct = (books: Book[]) => run(() => updateEachBook(markDistinctPatches(group.books, books)))
 
   return (
     <li className="rounded-[1.5rem] bg-card p-4 sm:p-5">
@@ -122,7 +119,7 @@ interface BookOptionProps {
   disabled: boolean
   selected: boolean
   onKeep: () => void
-  /** Sólo en grupos de 3 o más: sacar este libro del grupo. */
+
   onNotDuplicate?: () => void
 }
 

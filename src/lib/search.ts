@@ -5,7 +5,6 @@ import type { Book, ReadFilter, SortField, SortKey } from "@/lib/types"
 export interface LibraryQuery {
   text: string
   read: ReadFilter
-  /** Géneros elegidos en el filtro: vale el libro que tenga cualquiera de ellos. */
   genres: string[]
   sort: SortKey
 }
@@ -16,8 +15,6 @@ function haystack(book: Book): string {
   )
 }
 
-/** Cada palabra buscada tiene que aparecer en algún campo (AND), así
- * "tolkien 1954" o "anagrama novela" afinan en vez de ampliar. */
 function matchesText(book: Book, text: string): boolean {
   const terms = normalize(text).split(/\s+/).filter(Boolean)
   if (terms.length === 0) return true
@@ -27,7 +24,6 @@ function matchesText(book: Book, text: string): boolean {
 
 const collator = new Intl.Collator("es", { sensitivity: "base", numeric: true })
 
-/** Valor por el que se ordena; undefined = el libro no tiene ese dato. */
 const SORT_VALUE: Record<SortField, (b: Book) => string | number | undefined> = {
   recent: (b) => b.createdAt,
   title: (b) => b.title,
@@ -44,13 +40,13 @@ function sorter(key: SortKey): (a: Book, b: Book) => number {
   const sign = direction === "desc" ? -1 : 1
   return (a, b) => {
     const [va, vb] = [value(a), value(b)]
-    // Los libros sin ese dato van siempre al final, en los dos sentidos.
+
     if (va === undefined || vb === undefined) {
       return va === vb ? 0 : va === undefined ? 1 : -1
     }
     const order = typeof va === "number" && typeof vb === "number" ? va - vb : collator.compare(String(va), String(vb))
     if (order !== 0) return sign * order
-    // Empate (mismo autor, mismo año…): por título.
+
     return field === "title" ? 0 : collator.compare(a.title ?? "", b.title ?? "")
   }
 }
@@ -71,10 +67,6 @@ export function uniqueGenres(books: Book[]): string[] {
   return [...genres].sort(collator.compare)
 }
 
-/**
- * Editoriales ya usadas, para autocompletar. "Tusquets" y "TUSQUETS" cuentan
- * como una sola: se ofrece la forma más repetida.
- */
 export function uniquePublishers(books: Book[]): string[] {
   const counts = new Map<string, Map<string, number>>()
   for (const { publisher } of books) {
@@ -89,7 +81,6 @@ export function uniquePublishers(books: Book[]): string[] {
   return names.sort(collator.compare)
 }
 
-/** Clave para detectar duplicados al importar. */
 export function bookKey(book: Pick<Book, "title" | "author" | "goodreadsId">): string {
   if (book.goodreadsId) return `gr:${book.goodreadsId}`
   return `ta:${normalize(book.title ?? "")}|${normalize(book.author ?? "")}`

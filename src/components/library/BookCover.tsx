@@ -12,15 +12,12 @@ const COVER_STYLES = [
   { bg: "#F3E2CC", fg: "var(--burgundy)", flower: "var(--sage)" },
 ]
 
-/** Mientras no se ha buscado portada, se prueba al vuelo con el ISBN. */
 function coverSource(book: Book): string | undefined {
   if (book.coverUrl) return book.coverUrl
   if (book.isbn && !book.coverChecked) return `https://covers.openlibrary.org/b/isbn/${book.isbn}-M.jpg?default=false`
   return undefined
 }
 
-/** Portada real si la hay; si no (o si la imagen falla), una ilustrada
- * generada con el título, siempre del mismo color para cada libro. */
 export function BookCover({ book, className }: { book: Book; className?: string }) {
   const src = coverSource(book)
   const [failedSrc, setFailedSrc] = useState<string | null>(null)

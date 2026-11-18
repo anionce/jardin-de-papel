@@ -61,7 +61,6 @@ export function LibraryFilters({ genres }: { genres: string[] }) {
   )
 }
 
-/** Desplegable para elegir varios géneros a la vez (vale cualquiera de ellos). */
 function GenreFilter({ genres }: { genres: string[] }) {
   const selected = useFiltersStore((s) => s.genres)
   const toggleGenre = useFiltersStore((s) => s.toggleGenre)
@@ -70,7 +69,6 @@ function GenreFilter({ genres }: { genres: string[] }) {
   const [query, setQuery] = useState("")
   const ref = useRef<HTMLDivElement>(null)
 
-  // Se cierra al pulsar fuera.
   useEffect(() => {
     if (!open) return
     const close = (e: MouseEvent) => {

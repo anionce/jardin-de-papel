@@ -8,10 +8,8 @@ import type { Book } from "@/lib/types"
 import { useBookFormStore } from "@/store/useBookFormStore"
 import { useSelectionStore } from "@/store/useSelectionStore"
 
-// Fondos en arco, como los productos del diseño de referencia.
 const ARCH_COLORS = ["bg-blush/70", "bg-mustard/35", "bg-sage/45", "bg-coral/35", "bg-secondary"]
 
-/** memo: al cambiar un libro sólo se repinta su tarjeta. */
 export const BookCard = memo(function BookCard({ book }: { book: Book }) {
   const openEdit = useBookFormStore((s) => s.openEdit)
   const selecting = useSelectionStore((s) => s.active)

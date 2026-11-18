@@ -12,6 +12,12 @@ const NAV_ITEMS = [
   { to: "/importar", label: "Importar", end: false },
 ]
 
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    "inline-flex items-center gap-1.5 text-sm font-medium transition-colors",
+    isActive ? "text-burgundy underline decoration-2 underline-offset-6" : "text-muted-foreground hover:text-foreground"
+  )
+
 export function Header({ onSignOut }: { onSignOut?: () => void }) {
   const openNew = useBookFormStore((s) => s.openNew)
   const count = useLibraryStore((s) => s.books.length)
@@ -27,30 +33,12 @@ export function Header({ onSignOut }: { onSignOut?: () => void }) {
 
       <nav className="order-3 flex w-full flex-wrap gap-x-5 gap-y-2 sm:order-none sm:w-auto">
         {NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            className={({ isActive }) =>
-              cn(
-                "text-sm font-medium transition-colors",
-                isActive ? "text-burgundy underline decoration-2 underline-offset-6" : "text-muted-foreground hover:text-foreground"
-              )
-            }
-          >
+          <NavLink key={item.to} to={item.to} end={item.end} className={navLinkClass}>
             {item.label}
           </NavLink>
         ))}
         {duplicateCount > 0 && (
-          <NavLink
-            to="/duplicados"
-            className={({ isActive }) =>
-              cn(
-                "inline-flex items-center gap-1.5 text-sm font-medium transition-colors",
-                isActive ? "text-burgundy underline decoration-2 underline-offset-6" : "text-muted-foreground hover:text-foreground"
-              )
-            }
-          >
+          <NavLink to="/duplicados" className={navLinkClass}>
             Duplicados
             <span className="rounded-full bg-coral px-1.5 py-px text-[11px] font-bold text-on-color tabular-nums">
               {duplicateCount}

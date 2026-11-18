@@ -7,7 +7,6 @@ interface FlowerProps {
   className?: string
 }
 
-/** Flor plana de cinco/seis pétalos, como las del diseño de referencia. */
 export function Flower({ petal = "var(--paper)", center = "var(--mustard)", petals = 5, className }: FlowerProps) {
   return (
     <svg viewBox="0 0 100 100" aria-hidden="true" className={cn("pointer-events-none", className)}>
@@ -27,7 +26,6 @@ export function Flower({ petal = "var(--paper)", center = "var(--mustard)", peta
   )
 }
 
-/** Tallo con dos hojas, para acompañar a las flores en los bordes. */
 export function Stem({ className, color = "var(--sage-deep)" }: { className?: string; color?: string }) {
   return (
     <svg viewBox="0 0 80 200" aria-hidden="true" className={cn("pointer-events-none", className)}>
@@ -38,7 +36,6 @@ export function Stem({ className, color = "var(--sage-deep)" }: { className?: st
   )
 }
 
-/** Raya ondulada bajo los títulos. */
 export function Squiggle({ className, color = "currentColor" }: { className?: string; color?: string }) {
   return (
     <svg viewBox="0 0 60 10" aria-hidden="true" className={cn("h-2.5 w-14", className)}>

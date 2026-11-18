@@ -1,58 +1,65 @@
 # Jardín de Papel
 
-Base de datos de la biblioteca familiar: libros compartidos en tiempo real, buscador,
-alta manual (todos los campos opcionales) e importación desde Goodreads.
+A home library catalogue: books synced in real time, search and filters, manual entry (every field optional) and Goodreads import.
 
-**Stack:** Vite + React 19 + TypeScript · Tailwind v4 + shadcn (base-ui) · react-router · zustand · Firebase (Auth + Firestore) · papaparse.
+**Stack:** Vite + React 19 + TypeScript · Tailwind v4 + shadcn (base-ui) · react-router · zustand · Firebase (Auth + Firestore) · papaparse · Vitest + Testing Library.
 
 ```
 src/
   components/
-    decor/      ilustraciones SVG (flores, pila de libros, ondas)
+    decor/      SVG illustrations (flowers, book stack)
     layout/     AppShell, Header, Footer, LoginScreen
-    library/    BookCard, BookCover, BookFormDialog, SearchBar, filtros, stats
-    ui/         componentes shadcn
-  hooks/        useAuth, useLibrarySync, useFilteredBooks
-  lib/          firebase, db (Firestore / modo local), goodreads (CSV), search, types
-  pages/        LibraryPage, ImportPage
-  store/        zustand: libros, filtros, formulario
+    library/    BookCard, BookCover, BookFormDialog, filters, selection bar, stats
+    ui/         shadcn components
+  hooks/        auth, library sync, filtering, suggestions, cover search, background lookup
+  lib/          Firestore / local storage, Goodreads CSV, search, duplicates, genres, book APIs
+  pages/        Library, Genres, Duplicates, Import
+  store/        zustand stores: books, filters, selection, form
+  test/         test setup and helpers
 ```
 
-## Desarrollo
+## Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Sin `.env` arranca en **modo local** (los libros se guardan en el navegador): sirve para probar.
+Without a `.env` file the app runs in **local mode**: books are stored in the browser's localStorage, which is handy for trying it out.
 
-## Firebase
+| Script              | What it does                    |
+| ------------------- | ------------------------------- |
+| `npm run dev`       | Start the dev server            |
+| `npm test`          | Run the test suite once         |
+| `npm run test:watch`| Run tests in watch mode         |
+| `npm run typecheck` | Type-check the project          |
+| `npm run lint`      | Lint with oxlint                |
+| `npm run build`     | Type-check and build for production |
 
-1. Crea un proyecto en [console.firebase.google.com](https://console.firebase.google.com) y añade una app web.
-2. **Authentication → Sign-in method →** activa Google.
-3. **Firestore Database →** créala (modo producción).
-4. Copia `.env.example` a `.env` y pega la config web.
-5. En `firestore.rules` pon vuestros dos correos de Google y publícala
-   (pégala en *Firestore → Reglas* o `firebase deploy --only firestore:rules`).
-6. Al desplegar en Netlify, añade las mismas variables `VITE_FIREBASE_*` y el dominio de Netlify en
-   *Authentication → Settings → Authorized domains*.
+Tests always run in local mode and never read `.env`, so they never touch Firebase.
 
-## Importar de Goodreads
+## Firebase setup
 
-Goodreads → My Books → Import and export → **Export Library** → arrastra el `.csv` en la pestaña *Importar*.
-Los libros que ya estén (mismo id de Goodreads o mismo título + autor) no se duplican, así que se puede reimportar.
+1. Create a project at [console.firebase.google.com](https://console.firebase.google.com) and add a web app.
+2. **Authentication → Sign-in method:** enable Google.
+3. **Firestore Database:** create it in production mode.
+4. Copy `.env.example` to `.env` and paste the web config.
+5. Put the allowed Google accounts in `firestore.rules` and publish it (paste it in *Firestore → Rules* or run `firebase deploy --only firestore:rules`).
+6. When deploying to Netlify, add the same `VITE_FIREBASE_*` variables and add the Netlify domain under *Authentication → Settings → Authorized domains*.
 
-## Portadas
+Each book has an `owner` (the account's email) and every account only sees its own library.
 
-Se buscan solas en segundo plano (una vez por libro) y se guardan en la base de datos:
-ISBN en Google Books → ISBN en Open Library → título + autor en Google Books → título + autor en Open Library.
-La clave `VITE_GOOGLE_BOOKS_API_KEY` es del proyecto de Google Cloud de Firebase, limitada a la Books API y a
-`jardin-de-papel.netlify.app` + `localhost:5180`. Desde el formulario de un libro se puede buscar de nuevo, pegar una URL o quitarla.
+## Goodreads import
 
-## Duplicados (también entre idiomas)
+Goodreads → My Books → Import and export → **Export Library**, then drop the `.csv` on the *Importar* page.
+Books that are already on the shelf (same Goodreads id, or same title and author) are skipped, so importing again is safe.
 
-Al buscar la portada se guarda también la *obra* de Open Library (`workKey`), que es la misma para todas las ediciones
-y traducciones: así *The Shadow of the Wind* y *La sombra del viento* se reconocen como el mismo libro. La página
-**Duplicados** agrupa libros con la misma obra o mismo autor y título casi igual; al quedarse con uno, los datos que le
-falten se copian del otro. «No son duplicados» lo recuerda (`distinctFrom`). Al añadir a mano o importar se avisa.
+## Covers
+
+Covers are looked up in the background, once per book, and saved to the database:
+ISBN on Google Books → ISBN on Open Library → title + author on Google Books → title + author on Open Library.
+`VITE_GOOGLE_BOOKS_API_KEY` belongs to the Firebase project's Google Cloud project and is restricted to the Books API and to the app's domains. From a book's form you can search again, upload a photo, paste a URL or remove the cover.
+
+## Duplicates (across languages too)
+
+The cover lookup also stores the Open Library *work* (`workKey`), which is shared by every edition and translation, so *The Shadow of the Wind* and *La sombra del viento* are recognised as the same book. The **Duplicados** page groups books with the same work, or the same author and title. Keeping one copies over any data it is missing from the others, and "not duplicates" is remembered (`distinctFrom`). Adding or importing a similar book shows a warning.

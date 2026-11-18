@@ -3,72 +3,21 @@ import { Camera, ImageOff, Loader2, Search, Trash2 } from "lucide-react"
 import { BookCover } from "@/components/library/BookCover"
 import { BookSuggestions } from "@/components/library/BookSuggestions"
 import { GenresInput } from "@/components/library/GenresInput"
-import { genresPatch } from "@/lib/genres"
-import { useBookSuggestions } from "@/hooks/useBookSuggestions"
-import type { BookSuggestion } from "@/lib/bookLookup"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { findCoverCandidates, findEdition, TRUSTED_WORK_VERSION } from "@/lib/bookLookup"
-import { imageFileToDataUrl, isUploadedImage, preloadImage } from "@/lib/image"
+import { useBookSuggestions } from "@/hooks/useBookSuggestions"
+import { useCoverSearch } from "@/hooks/useCoverSearch"
+import type { BookSuggestion } from "@/lib/bookLookup"
+import { applySuggestion, identityChanged, toDraft, toValues, type FormValues } from "@/lib/bookForm"
 import { addBook, removeBook, updateBook } from "@/lib/db"
 import { similarBooksFinder } from "@/lib/duplicates"
+import { isUploadedImage } from "@/lib/image"
 import { uniqueGenres, uniquePublishers } from "@/lib/search"
-import { normalize } from "@/lib/text"
 import { cn } from "@/lib/utils"
 import type { Book, BookDraft } from "@/lib/types"
 import { useBookFormStore } from "@/store/useBookFormStore"
 import { useLibraryStore } from "@/store/useLibraryStore"
-
-interface FormValues {
-  title: string
-  author: string
-  publisher: string
-  genres: string[]
-  year: string
-  pages: string
-  isbn: string
-  coverUrl: string
-  /** El usuario quitó la portada a propósito: no volver a buscarla sola. */
-  coverRemoved: boolean
-  read: boolean
-}
-
-function toValues(book: Book | null): FormValues {
-  return {
-    title: book?.title ?? "",
-    author: book?.author ?? "",
-    publisher: book?.publisher ?? "",
-    genres: book?.genres ?? [],
-    year: book?.year ? String(book.year) : "",
-    pages: book?.pages ? String(book.pages) : "",
-    isbn: book?.isbn ?? "",
-    coverUrl: book?.coverUrl ?? "",
-    coverRemoved: Boolean(book?.coverChecked && !book.coverUrl),
-    read: book?.read ?? false,
-  }
-}
-
-/** Campos vacíos → undefined (en edición, eso borra el dato guardado). */
-function toDraft(values: FormValues): BookDraft {
-  const text = (v: string) => v.trim() || undefined
-  const year = parseInt(values.year, 10)
-  const pages = parseInt(values.pages, 10)
-  return {
-    title: text(values.title),
-    author: text(values.author),
-    publisher: text(values.publisher),
-    genres: genresPatch(values.genres),
-    year: Number.isFinite(year) ? year : undefined,
-    pages: Number.isFinite(pages) && pages > 0 ? pages : undefined,
-    isbn: text(values.isbn.replace(/[^0-9Xx]/g, "")),
-    coverUrl: text(values.coverUrl),
-    // Sin portada y sin quitarla a propósito → la búsqueda automática lo
-    // reintentará con los datos nuevos (p. ej. tras corregir título o ISBN).
-    coverChecked: values.coverUrl.trim() || values.coverRemoved ? true : undefined,
-    read: values.read,
-  }
-}
 
 type TextField = Exclude<keyof FormValues, "read" | "coverUrl" | "coverRemoved" | "genres">
 
@@ -83,10 +32,9 @@ const FIELDS: { name: TextField; label: string; placeholder: string; inputMode?:
 
 const FULL_WIDTH = new Set<TextField>(["title", "author", "publisher", "isbn"])
 
-/** Campos que se autocompletan con lo que ya hay en la estantería. */
 const DATALISTS: Partial<Record<TextField, string>> = { publisher: "publisher-options" }
 
-export function BookFormDialog({ addedBy }: { addedBy?: string }) {
+export function BookFormDialog() {
   const { open, editing, close } = useBookFormStore()
 
   return (
@@ -98,31 +46,24 @@ export function BookFormDialog({ addedBy }: { addedBy?: string }) {
           </DialogTitle>
           <DialogDescription>Todos los campos son opcionales: rellena lo que sepas.</DialogDescription>
         </DialogHeader>
-        {/* key: cada apertura arranca con el formulario limpio / del libro editado */}
-        {open && <BookForm key={editing?.id ?? "new"} editing={editing} addedBy={addedBy} onDone={close} />}
+        {open && <BookForm key={editing?.id ?? "new"} editing={editing} onDone={close} />}
       </DialogContent>
     </Dialog>
   )
 }
 
-function BookForm({ editing, addedBy, onDone }: { editing: Book | null; addedBy?: string; onDone: () => void }) {
+function BookForm({ editing, onDone }: { editing: Book | null; onDone: () => void }) {
   const books = useLibraryStore((s) => s.books)
   const genres = useMemo(() => uniqueGenres(books), [books])
   const publishers = useMemo(() => uniquePublishers(books), [books])
   const [values, setValues] = useState<FormValues>(() => toValues(editing))
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [searchingCover, setSearchingCover] = useState(false)
-  const [coverMessage, setCoverMessage] = useState<string | null>(null)
-  /** Libros parecidos ya en la estantería; se avisa una vez antes de guardar. */
   const [similar, setSimilar] = useState<Book[] | null>(null)
-
-  /** Editorial a la que corresponden la portada y el ISBN que hay ahora. */
-  const [editionPublisher, setEditionPublisher] = useState(values.publisher)
-
-  /** Sólo se busca cuando el usuario escribe título o autor (no al abrir para editar). */
   const [lookupEnabled, setLookupEnabled] = useState(false)
   const lookup = useBookSuggestions(values.title, values.author, lookupEnabled)
+  const cover = useCoverSearch(values, setValues, editing)
+  const fileInput = useRef<HTMLInputElement>(null)
 
   const set = (name: keyof FormValues, value: string | boolean) => {
     setValues((v) => ({ ...v, [name]: value }))
@@ -132,154 +73,27 @@ function BookForm({ editing, addedBy, onDone }: { editing: Book | null; addedBy?
     }
   }
 
-  function pickSuggestion(s: BookSuggestion) {
-    setValues((v) => ({
-      ...v,
-      title: s.title,
-      author: s.author ?? v.author,
-      publisher: s.publisher ?? v.publisher,
-      year: s.year ? String(s.year) : v.year,
-      pages: s.pages ? String(s.pages) : v.pages,
-      isbn: s.isbn ?? v.isbn,
-      coverUrl: s.coverUrl ?? v.coverUrl,
-      coverRemoved: s.coverUrl ? false : v.coverRemoved,
-    }))
+  function pickSuggestion(suggestion: BookSuggestion) {
+    setValues((v) => applySuggestion(v, suggestion))
     setSimilar(null)
     setLookupEnabled(false)
-    setEditionPublisher(s.publisher ?? values.publisher)
+    cover.setEditionPublisher(suggestion.publisher ?? values.publisher)
   }
 
-  /**
-   * Al cambiar la editorial (otra edición del mismo libro), se busca esa
-   * edición para poner su portada y su ISBN.
-   */
-  async function handlePublisherBlur() {
-    const publisher = values.publisher.trim()
-    if (!publisher || !values.title.trim() || normalize(publisher) === normalize(editionPublisher)) return
-    setEditionPublisher(publisher)
-    setSearchingCover(true)
-    setCoverMessage(`Buscando la edición de ${publisher}…`)
-    try {
-      const edition = await findEdition({ title: values.title, author: values.author || undefined, publisher })
-      if (edition?.coverUrl || edition?.isbn) {
-        setValues((v) => ({
-          ...v,
-          coverUrl: edition.coverUrl ?? v.coverUrl,
-          coverRemoved: edition.coverUrl ? false : v.coverRemoved,
-          isbn: edition.isbn ?? v.isbn,
-        }))
-        const what = [edition.coverUrl && "Portada", edition.isbn && "ISBN"].filter(Boolean).join(" e ")
-        setCoverMessage(`${what} de la edición de ${publisher}.`)
-      } else {
-        setCoverMessage(`No he encontrado la edición de ${publisher}; se queda la portada que había.`)
-      }
-    } catch {
-      setCoverMessage("No se ha podido buscar la edición ahora mismo.")
-    } finally {
-      setSearchingCover(false)
-    }
-  }
+  const preview: Book = { ...toDraft(values), id: editing?.id ?? "nuevo", coverChecked: true, createdAt: 0 }
 
-  const preview: Book = {
-    ...toDraft(values),
-    id: editing?.id ?? "nuevo",
-    coverChecked: true,
-    createdAt: 0,
-  }
-
-  /** Portadas encontradas para estos datos; cada clic en "Buscar portada" pasa a la siguiente. */
-  const [coverCandidates, setCoverCandidates] = useState<{ key: string; urls: string[] } | null>(null)
-  const fileInput = useRef<HTMLInputElement>(null)
-  /** Portadas que no cargaron: no se vuelven a probar. */
-  const failedCovers = useRef(new Set<string>())
-
-  async function handleFindCover() {
-    const draft = toDraft(values)
-    const key = [draft.title, draft.author, draft.publisher, draft.isbn].map((v) => normalize(v ?? "")).join("|")
-    setCoverMessage(null)
-    let urls = coverCandidates?.key === key ? coverCandidates.urls : null
-    if (!urls) {
-      setSearchingCover(true)
-      try {
-        // La obra ya conocida ahorra una búsqueda (si no han cambiado título ni autor).
-        const sameBook =
-          editing !== null &&
-          (editing.workVersion ?? 0) >= TRUSTED_WORK_VERSION &&
-          editing.title === draft.title &&
-          editing.author === draft.author
-        urls = await findCoverCandidates({ ...draft, workKey: sameBook ? editing.workKey : undefined })
-        setCoverCandidates({ key, urls })
-      } catch {
-        setCoverMessage("No se ha podido buscar ahora mismo. Prueba más tarde.")
-        return
-      } finally {
-        setSearchingCover(false)
-      }
-    }
-    const current = urls.indexOf(values.coverUrl)
-    // Se prueban las siguientes hasta dar con una que cargue de verdad: así
-    // cada clic enseña una portada distinta, no un hueco en blanco.
-    setSearchingCover(true)
-    setCoverMessage("Cargando portada…")
-    let found = -1
-    for (let step = 1; step <= urls.length; step++) {
-      const index = (current + step) % urls.length
-      if (index === current) break
-      if (failedCovers.current.has(urls[index])) continue
-      if (await preloadImage(urls[index])) {
-        found = index
-        break
-      }
-      failedCovers.current.add(urls[index])
-    }
-    setSearchingCover(false)
-    if (found === -1) {
-      setCoverMessage(
-        current === -1
-          ? "No he encontrado portada. Sube una foto o pega la URL de una imagen."
-          : "No he encontrado otra portada. Puedes subir una foto."
-      )
-      return
-    }
-    setValues((v) => ({ ...v, coverUrl: urls[found], coverRemoved: false }))
-    setCoverMessage(
-      found <= current
-        ? `No hay más: vuelvo a la primera (${found + 1} de ${urls.length}).`
-        : `Portada ${found + 1} de ${urls.length}. ¿No es esta? Pulsa otra vez.`
-    )
-    // La siguiente se va cargando ya, para que el próximo clic sea inmediato.
-    const upcoming = urls[(found + 1) % urls.length]
-    if (upcoming && !failedCovers.current.has(upcoming)) void preloadImage(upcoming)
-  }
-
-  async function handleUpload(e: ChangeEvent<HTMLInputElement>) {
+  function handleUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ""
-    if (!file) return
-    setSearchingCover(true)
-    setCoverMessage(null)
-    try {
-      const coverUrl = await imageFileToDataUrl(file)
-      setValues((v) => ({ ...v, coverUrl, coverRemoved: false }))
-      setCoverMessage("Foto lista. Se guardará con el libro.")
-    } catch {
-      setCoverMessage("No he podido leer esa imagen. Prueba con una foto JPG o PNG.")
-    } finally {
-      setSearchingCover(false)
-    }
-  }
-
-  function identityChanged(draft: BookDraft): boolean {
-    if (!editing) return true
-    return draft.title !== editing.title || draft.author !== editing.author || draft.isbn !== editing.isbn
+    if (file) void cover.uploadCover(file)
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const draft = toDraft(values)
+    const isNewIdentity = identityChanged(editing, draft)
 
-    // Aviso de posible duplicado (sólo la primera vez que se pulsa guardar).
-    if (similar === null && identityChanged(draft)) {
+    if (similar === null && isNewIdentity) {
       const matches = similarBooksFinder(books.filter((b) => b.id !== editing?.id))(draft)
       if (matches.length > 0) {
         setSimilar(matches)
@@ -289,12 +103,11 @@ function BookForm({ editing, addedBy, onDone }: { editing: Book | null; addedBy?
 
     setSaving(true)
     try {
-      // Si cambia título, autor o ISBN, la obra de Open Library se vuelve a buscar.
-      const patch: Partial<BookDraft> = identityChanged(draft)
+      const patch: Partial<BookDraft> = isNewIdentity
         ? { ...draft, workKey: undefined, workChecked: undefined, workVersion: undefined }
         : draft
       if (editing) await updateBook(editing.id, patch)
-      else await addBook(draft, addedBy)
+      else await addBook(draft)
       onDone()
     } finally {
       setSaving(false)
@@ -319,7 +132,6 @@ function BookForm({ editing, addedBy, onDone }: { editing: Book | null; addedBy?
           <label className="flex flex-col gap-1.5 text-[13px] font-medium">
             Portada (URL de la imagen)
             <Input
-              // Una foto subida es un data URL larguísimo: no se enseña.
               value={isUploadedImage(values.coverUrl) ? "" : values.coverUrl}
               onChange={(e) => setValues((v) => ({ ...v, coverUrl: e.target.value, coverRemoved: false }))}
               placeholder={isUploadedImage(values.coverUrl) ? "Foto subida ✓" : "https://…"}
@@ -331,19 +143,19 @@ function BookForm({ editing, addedBy, onDone }: { editing: Book | null; addedBy?
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleFindCover}
-              disabled={searchingCover || (!values.title.trim() && !values.isbn.trim())}
+              onClick={cover.findNextCover}
+              disabled={cover.searching || (!values.title.trim() && !values.isbn.trim())}
               className="rounded-full"
             >
-              {searchingCover ? <Loader2 className="animate-spin" /> : <Search />}{" "}
-              {coverCandidates && values.coverUrl ? "Otra portada" : "Buscar portada"}
+              {cover.searching ? <Loader2 className="animate-spin" /> : <Search />}{" "}
+              {cover.hasCandidates && values.coverUrl ? "Otra portada" : "Buscar portada"}
             </Button>
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => fileInput.current?.click()}
-              disabled={searchingCover}
+              disabled={cover.searching}
               className="rounded-full"
             >
               <Camera /> Subir foto
@@ -361,7 +173,7 @@ function BookForm({ editing, addedBy, onDone }: { editing: Book | null; addedBy?
               </Button>
             )}
           </div>
-          {coverMessage && <p className="text-xs text-muted-foreground">{coverMessage}</p>}
+          {cover.message && <p className="text-xs text-muted-foreground">{cover.message}</p>}
         </div>
       </div>
 
@@ -379,7 +191,7 @@ function BookForm({ editing, addedBy, onDone }: { editing: Book | null; addedBy?
               list={DATALISTS[field.name]}
               autoFocus={field.name === "title"}
               autoComplete="off"
-              onBlur={field.name === "publisher" ? handlePublisherBlur : undefined}
+              onBlur={field.name === "publisher" ? cover.findPublisherEdition : undefined}
             />
           </label>
           {field.name === "author" && lookup.active && (

@@ -5,8 +5,7 @@ import { useLibraryStore } from "@/store/useLibraryStore"
 
 export function useFilteredBooks() {
   const books = useLibraryStore((s) => s.books)
-  // Lo escrito se aplica sin bloquear el teclado: con muchos libros, filtrar
-  // y pintar la rejilla puede ir un poco por detrás de lo que tecleas.
+
   const text = useDeferredValue(useFiltersStore((s) => s.text))
   const read = useFiltersStore((s) => s.read)
   const genres = useFiltersStore((s) => s.genres)

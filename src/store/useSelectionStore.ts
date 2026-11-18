@@ -10,7 +10,6 @@ interface SelectionState {
   clear: () => void
 }
 
-/** Modo "Seleccionar" de la estantería: marcar varios libros y actuar sobre todos. */
 export const useSelectionStore = create<SelectionState>()((set) => ({
   active: false,
   ids: new Set(),

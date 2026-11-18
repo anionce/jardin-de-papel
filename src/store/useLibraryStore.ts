@@ -9,7 +9,6 @@ interface LibraryState {
   setError: (error: string | null) => void
 }
 
-/** Lo rellena useLibrarySync (una sola suscripción en AppShell). */
 export const useLibraryStore = create<LibraryState>()((set) => ({
   books: [],
   loaded: false,

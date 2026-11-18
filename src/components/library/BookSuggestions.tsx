@@ -9,7 +9,6 @@ interface Props {
   onClose: () => void
 }
 
-/** Lista de libros encontrados mientras se escribe; al elegir uno se rellena el formulario. */
 export function BookSuggestions({ loading, suggestions, onPick, onClose }: Props) {
   return (
     <div className="rounded-2xl border border-border bg-card p-2 sm:col-span-2">

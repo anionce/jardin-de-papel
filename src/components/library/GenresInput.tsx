@@ -6,16 +6,12 @@ import { cn } from "@/lib/utils"
 interface Props {
   value: string[]
   onChange: (genres: string[]) => void
-  /** Géneros ya usados, para autocompletar. */
+
   options: string[]
   placeholder?: string
   className?: string
 }
 
-/**
- * Varios géneros como etiquetas: se escribe uno y se añade con Intro, coma o
- * el botón +; la × de cada etiqueta lo quita.
- */
 export function GenresInput({ value, onChange, options, placeholder = "Añade un género…", className }: Props) {
   const [draft, setDraft] = useState("")
   const listId = useId()
@@ -58,7 +54,6 @@ export function GenresInput({ value, onChange, options, placeholder = "Añade un
       <input
         value={draft}
         onChange={(e) => {
-          // Elegir una opción del autocompletado la añade directamente.
           const text = e.target.value
           if (options.includes(text) && !value.includes(text)) add(text)
           else setDraft(text)

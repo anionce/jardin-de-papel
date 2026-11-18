@@ -1,11 +1,6 @@
 const MAX_SIDE = 500
 const QUALITY = 0.82
 
-/**
- * Foto de portada subida desde el móvil/ordenador → JPEG pequeño en data URL
- * (unos 30–60 KB), que se guarda tal cual en el libro. Así no hace falta un
- * almacén de archivos aparte y se ve en todos tus dispositivos.
- */
 export async function imageFileToDataUrl(file: File): Promise<string> {
   const bitmap = await createImageBitmap(file)
   const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height))
@@ -21,10 +16,6 @@ export async function imageFileToDataUrl(file: File): Promise<string> {
 
 export const isUploadedImage = (url: string) => url.startsWith("data:")
 
-/**
- * Carga una imagen antes de enseñarla: true si existe y no es un píxel vacío
- * (algunas portadas de Open Library fallan o tardan muchísimo).
- */
 export function preloadImage(url: string, timeoutMs = 6000): Promise<boolean> {
   return new Promise((resolve) => {
     const img = new Image()
@@ -40,4 +31,21 @@ export function preloadImage(url: string, timeoutMs = 6000): Promise<boolean> {
     }
     img.src = url
   })
+}
+
+export async function nextLoadableCover(
+  urls: string[],
+  current: number,
+  failed: Set<string>,
+  load: (url: string) => Promise<boolean> = preloadImage
+): Promise<number> {
+  for (let step = 1; step <= urls.length; step++) {
+    const index = (current + step) % urls.length
+    if (index === current) break
+    const url = urls[index]
+    if (failed.has(url)) continue
+    if (await load(url)) return index
+    failed.add(url)
+  }
+  return -1
 }

@@ -23,7 +23,6 @@ export function LibraryPage() {
   const startSelecting = useSelectionStore((s) => s.start)
   const stopSelecting = useSelectionStore((s) => s.stop)
 
-  // Al salir de la página no se queda el modo selección enganchado.
   useEffect(() => stopSelecting, [stopSelecting])
 
   return (
@@ -79,7 +78,7 @@ export function LibraryPage() {
             )}
             <StatsBand books={books} />
             {selecting && <SelectionBar visibleBooks={filtered} />}
-            {/* Hueco para que la barra fija no tape los últimos libros */}
+
             {selecting && <div className="h-40" />}
           </>
         )}

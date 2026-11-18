@@ -3,13 +3,12 @@ import { BookCheck, BookMarked, Tag, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { removeBooks, updateBooks, updateEachBook } from "@/lib/db"
-import { bookGenres, genresPatch, hasGenre } from "@/lib/genres"
+import { addGenre, hasGenre, removeGenre } from "@/lib/genres"
 import { uniqueGenres } from "@/lib/search"
 import type { Book } from "@/lib/types"
 import { useLibraryStore } from "@/store/useLibraryStore"
 import { useSelectionStore } from "@/store/useSelectionStore"
 
-/** Barra fija abajo mientras se seleccionan libros: acciones sobre todos a la vez. */
 export function SelectionBar({ visibleBooks }: { visibleBooks: Book[] }) {
   const { ids, stop, setMany, clear } = useSelectionStore()
   const books = useLibraryStore((s) => s.books)
@@ -42,21 +41,14 @@ export function SelectionBar({ visibleBooks }: { visibleBooks: Book[] }) {
     clear()
   }
 
-  /** Añade o quita un género a todos los seleccionados, sin tocar los demás géneros de cada libro. */
   async function handleGenre(mode: "add" | "remove") {
     const name = genre.trim()
     if (!name) return
-    const ids = new Set(selected)
+    const adding = mode === "add"
+
     const patches = books
-      .filter((b) => ids.has(b.id) && (mode === "add" ? !hasGenre(b, name) : hasGenre(b, name)))
-      .map((b) => ({
-        id: b.id,
-        patch: {
-          genres: genresPatch(
-            mode === "add" ? [...bookGenres(b), name] : bookGenres(b).filter((g) => g.toLowerCase() !== name.toLowerCase())
-          ),
-        },
-      }))
+      .filter((b) => ids.has(b.id) && hasGenre(b, name) !== adding)
+      .map((b) => ({ id: b.id, patch: { genres: adding ? addGenre(b, name) : removeGenre(b, name) } }))
     await run(() => updateEachBook(patches))
     setGenre("")
   }

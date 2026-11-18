@@ -3,11 +3,8 @@ import { useNavigate } from "react-router-dom"
 import { FileUp, Loader2 } from "lucide-react"
 import { Flower, Squiggle } from "@/components/decor/Flower"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/hooks/useAuth"
 import { addBooks } from "@/lib/db"
-import { parseGoodreadsCsv, type GoodreadsImport } from "@/lib/goodreads"
-import { similarBooksFinder } from "@/lib/duplicates"
-import { bookKey } from "@/lib/search"
+import { parseGoodreadsCsv, planImport, type GoodreadsImport, type ImportPlan } from "@/lib/goodreads"
 import { cn } from "@/lib/utils"
 import { useLibraryStore } from "@/store/useLibraryStore"
 
@@ -18,9 +15,12 @@ const STEPS = [
   "Arrástralo aquí abajo.",
 ]
 
+const EMPTY_PLAN: ImportPlan = { fresh: [], duplicates: 0, unreadSkipped: 0, similar: 0 }
+
+const PREVIEW_LIMIT = 200
+
 export function ImportPage() {
   const navigate = useNavigate()
-  const { user } = useAuth()
   const books = useLibraryStore((s) => s.books)
   const [parsed, setParsed] = useState<GoodreadsImport | null>(null)
   const [fileName, setFileName] = useState("")
@@ -29,24 +29,10 @@ export function ImportPage() {
   const [importing, setImporting] = useState(false)
   const [onlyRead, setOnlyRead] = useState(false)
 
-  // Lo que ya está en la estantería no se vuelve a importar.
-  const { fresh, duplicates, unreadSkipped, similar } = useMemo(() => {
-    if (!parsed) return { fresh: [], duplicates: 0, unreadSkipped: 0, similar: 0 }
-    const candidates = onlyRead ? parsed.books.filter((b) => b.read) : parsed.books
-    const existing = new Set(books.flatMap((b) => [bookKey(b), bookKey({ ...b, goodreadsId: undefined })]))
-    const fresh = candidates.filter(
-      (b) => !existing.has(bookKey(b)) && !existing.has(bookKey({ ...b, goodreadsId: undefined }))
-    )
-    // Parecidos a uno que ya está (otra edición, título casi igual): se importan
-    // igual, pero se avisa de que saldrán en "Duplicados".
-    const findSimilar = similarBooksFinder(books)
-    return {
-      fresh,
-      duplicates: candidates.length - fresh.length,
-      unreadSkipped: parsed.books.length - candidates.length,
-      similar: fresh.filter((b) => findSimilar(b).length > 0).length,
-    }
-  }, [parsed, books, onlyRead])
+  const { fresh, duplicates, unreadSkipped, similar } = useMemo(
+    () => (parsed ? planImport(parsed, books, onlyRead) : EMPTY_PLAN),
+    [parsed, books, onlyRead]
+  )
 
   async function handleFile(file: File | undefined) {
     if (!file) return
@@ -69,7 +55,7 @@ export function ImportPage() {
   async function handleImport() {
     setImporting(true)
     try {
-      await addBooks(fresh, user?.displayName ?? undefined)
+      await addBooks(fresh)
       navigate("/")
     } catch {
       setError("Algo ha fallado al guardar los libros. Inténtalo de nuevo.")
@@ -154,13 +140,15 @@ export function ImportPage() {
             </label>
             {fresh.length > 0 && (
               <ul className="mt-4 max-h-64 overflow-y-auto rounded-2xl bg-paper px-4 py-2 text-sm">
-                {fresh.slice(0, 200).map((b, i) => (
+                {fresh.slice(0, PREVIEW_LIMIT).map((b, i) => (
                   <li key={i} className="flex justify-between gap-3 border-b border-border/60 py-2 last:border-0">
                     <span className="line-clamp-1 font-medium">{b.title ?? "Sin título"}</span>
                     <span className="line-clamp-1 shrink-0 text-muted-foreground">{b.author}</span>
                   </li>
                 ))}
-                {fresh.length > 200 && <li className="py-2 text-muted-foreground">…y {fresh.length - 200} más</li>}
+                {fresh.length > PREVIEW_LIMIT && (
+                  <li className="py-2 text-muted-foreground">…y {fresh.length - PREVIEW_LIMIT} más</li>
+                )}
               </ul>
             )}
             <Button
