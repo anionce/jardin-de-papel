@@ -9,6 +9,7 @@ import { useLibraryStore } from "@/store/useLibraryStore"
 const NAV_ITEMS = [
   { to: "/", label: "Biblioteca", end: true },
   { to: "/generos", label: "Géneros", end: false },
+  { to: "/sagas", label: "Sagas", end: false },
   { to: "/personas", label: "Personas", end: false },
   { to: "/fotos", label: "Desde fotos", end: false },
   { to: "/importar", label: "Importar", end: false },

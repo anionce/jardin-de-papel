@@ -7,6 +7,7 @@ import { DuplicatesPage } from "@/pages/DuplicatesPage"
 import { PeoplePage } from "@/pages/PeoplePage"
 import { PhotoImportPage } from "@/pages/PhotoImportPage"
 import { AuthorPage } from "@/pages/AuthorPage"
+import { SagasPage } from "@/pages/SagasPage"
 
 export const App = () => {
   return (
@@ -19,6 +20,7 @@ export const App = () => {
         <Route path="importar" element={<ImportPage />} />
         <Route path="fotos" element={<PhotoImportPage />} />
         <Route path="autor/:name" element={<AuthorPage />} />
+        <Route path="sagas" element={<SagasPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
