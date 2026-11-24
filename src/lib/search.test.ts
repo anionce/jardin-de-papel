@@ -74,3 +74,20 @@ describe("bookKey", () => {
     expect(bookKey({ title: "Canción", author: "Ánne" })).toBe(bookKey({ title: "cancion", author: "anne" }))
   })
 })
+
+describe("filterBooks by person", () => {
+  const settings = { people: ["Alex", "Sam"], defaultPerson: "Alex" }
+  const mine = makeBook({ title: "Mine", person: "Alex" })
+  const unassigned = makeBook({ title: "Unassigned" })
+  const theirs = makeBook({ title: "Theirs", person: "Sam" })
+  const books = [mine, unassigned, theirs]
+
+  it("keeps the books of the chosen person, counting unassigned books for the default one", () => {
+    expect(filterBooks(books, query({ person: "Alex", settings }))).toEqual(expect.arrayContaining([mine, unassigned]))
+    expect(filterBooks(books, query({ person: "Sam", settings }))).toEqual([theirs])
+  })
+
+  it("keeps every book when no person is chosen", () => {
+    expect(filterBooks(books, query({ person: null, settings }))).toHaveLength(3)
+  })
+})

@@ -44,10 +44,23 @@ Tests always run in local mode and never read `.env`, so they never touch Fireba
 2. **Authentication → Sign-in method:** enable Google.
 3. **Firestore Database:** create it in production mode.
 4. Copy `.env.example` to `.env` and paste the web config.
-5. Put the allowed Google accounts in `firestore.rules` and publish it (paste it in *Firestore → Rules* or run `firebase deploy --only firestore:rules`).
-6. When deploying to Netlify, add the same `VITE_FIREBASE_*` variables and add the Netlify domain under *Authentication → Settings → Authorized domains*.
+5. Publish `firestore.rules` (paste it in *Firestore → Rules* or run `firebase deploy --only firestore:rules`).
+6. Give access to an account by creating a document in the `allowedUsers` collection whose ID is its Google email (any field, e.g. `access: "granted"`). The list lives only in Firestore, never in the repo.
+7. When deploying to Netlify, add the same `VITE_FIREBASE_*` variables and add the Netlify domain under *Authentication → Settings → Authorized domains*.
 
 Each book has an `owner` (the account's email) and every account only sees its own library.
+
+## People
+
+A library can be shared by several people (*Personas* page). Each account keeps its own list in `libraries/{email}` with a default person: new books and books without a `person` belong to them. Books can be filtered by person, assigned in the book form or in bulk from the selection bar, and renaming or removing a person updates their books.
+
+## Adding books from photos
+
+The *Desde fotos* page takes one or more photos of shelves, reads every spine (title, author and publisher) and shows an editable list before saving. Books already on the shelf are marked and left out by default, and a book seen in two overlapping photos is listed once.
+
+Each photo is resized in the browser and sent to the `read-shelf` Netlify Edge Function (`netlify/edge-functions/read-shelf.ts`), which asks Google Gemini (`gemini-4-hydrogen` through the Interactions API, JSON output, `store: false`) to read the spines. The function only answers to signed-in accounts that Firestore lets read their own library, so the key cannot be used by anyone else.
+
+Create a free key in [Google AI Studio](https://aistudio.google.com) and set it as `GEMINI_API_KEY` in the Netlify site's environment variables (never in the repo). On the free tier Google may use the photos to improve its products and the number of reads per day is limited. Without the key the page reports that photo reading is not configured.
 
 ## Goodreads import
 
@@ -56,7 +69,7 @@ Books that are already on the shelf (same Goodreads id, or same title and author
 
 ## Covers
 
-Covers are looked up in the background, once per book, and saved to the database:
+Covers are looked up in the background, once per book, and saved to the database. A book with a publisher and no ISBN first gets the cover and ISBN of that publisher's edition from Open Library; otherwise:
 ISBN on Google Books → ISBN on Open Library → title + author on Google Books → title + author on Open Library.
 `VITE_GOOGLE_BOOKS_API_KEY` belongs to the Firebase project's Google Cloud project and is restricted to the Books API and to the app's domains. From a book's form you can search again, upload a photo, paste a URL or remove the cover.
 

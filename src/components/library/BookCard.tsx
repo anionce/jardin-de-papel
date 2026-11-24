@@ -2,11 +2,13 @@ import { memo } from "react"
 import { BookMarked, Check } from "lucide-react"
 import { BookCover } from "@/components/library/BookCover"
 import { updateBook } from "@/lib/db"
+import { bookPerson, hasSeveralPeople } from "@/lib/people"
 import { hashString } from "@/lib/text"
 import { cn } from "@/lib/utils"
 import type { Book } from "@/lib/types"
 import { useBookFormStore } from "@/store/useBookFormStore"
 import { useSelectionStore } from "@/store/useSelectionStore"
+import { useSettingsStore } from "@/store/useSettingsStore"
 
 const ARCH_COLORS = ["bg-blush/70", "bg-mustard/35", "bg-sage/45", "bg-coral/35", "bg-secondary"]
 
@@ -15,6 +17,8 @@ export const BookCard = memo(({ book }: { book: Book }) => {
   const selecting = useSelectionStore((s) => s.active)
   const selected = useSelectionStore((s) => s.ids.has(book.id))
   const toggle = useSelectionStore((s) => s.toggle)
+  const settings = useSettingsStore((s) => s.settings)
+  const owner = hasSeveralPeople(settings) ? bookPerson(book, settings) : undefined
   const meta = [book.year, book.publisher, book.pages && `${book.pages} págs.`].filter(Boolean).join(" · ")
 
   return (
@@ -49,6 +53,7 @@ export const BookCard = memo(({ book }: { book: Book }) => {
       </h3>
       {book.author && <p className="mt-0.5 line-clamp-1 text-[13px] text-foreground/80">{book.author}</p>}
       {meta && <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{meta}</p>}
+      {owner && <p className="mt-0.5 text-[11px] font-semibold text-sage-deep">De {owner}</p>}
 
       <button
         type="button"

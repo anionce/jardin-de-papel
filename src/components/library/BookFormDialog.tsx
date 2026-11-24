@@ -1,8 +1,11 @@
-import { Fragment, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react"
-import { Camera, ImageOff, Loader2, Search, Trash2 } from "lucide-react"
-import { BookCover } from "@/components/library/BookCover"
+import { Fragment, useMemo, useState, type FormEvent } from "react"
+import { Trash2 } from "lucide-react"
+import { CoverField } from "@/components/library/CoverField"
 import { BookSuggestions } from "@/components/library/BookSuggestions"
 import { GenresInput } from "@/components/library/GenresInput"
+import { ReadToggle } from "@/components/library/ReadToggle"
+import { SimilarBooksWarning } from "@/components/library/SimilarBooksWarning"
+import { PersonPicker } from "@/components/library/PersonPicker"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -12,14 +15,15 @@ import type { BookSuggestion } from "@/lib/bookLookup"
 import { applySuggestion, identityChanged, toDraft, toValues, type FormValues } from "@/lib/bookForm"
 import { addBook, removeBook, updateBook } from "@/lib/db"
 import { similarBooksFinder } from "@/lib/duplicates"
-import { isUploadedImage } from "@/lib/image"
+import { hasSeveralPeople } from "@/lib/people"
 import { uniqueGenres, uniquePublishers } from "@/lib/search"
 import { cn } from "@/lib/utils"
 import type { Book, BookDraft } from "@/lib/types"
 import { useBookFormStore } from "@/store/useBookFormStore"
 import { useLibraryStore } from "@/store/useLibraryStore"
+import { useSettingsStore } from "@/store/useSettingsStore"
 
-type TextField = Exclude<keyof FormValues, "read" | "coverUrl" | "coverRemoved" | "genres">
+type TextField = Exclude<keyof FormValues, "read" | "coverUrl" | "coverRemoved" | "genres" | "person">
 
 const FIELDS: { name: TextField; label: string; placeholder: string; inputMode?: "numeric" }[] = [
   { name: "title", label: "Título", placeholder: "Cien años de soledad" },
@@ -56,14 +60,14 @@ const BookForm = ({ editing, onDone }: { editing: Book | null; onDone: () => voi
   const books = useLibraryStore((s) => s.books)
   const genres = useMemo(() => uniqueGenres(books), [books])
   const publishers = useMemo(() => uniquePublishers(books), [books])
-  const [values, setValues] = useState<FormValues>(() => toValues(editing))
+  const settings = useSettingsStore((s) => s.settings)
+  const [values, setValues] = useState<FormValues>(() => toValues(editing, settings))
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [similar, setSimilar] = useState<Book[] | null>(null)
   const [lookupEnabled, setLookupEnabled] = useState(false)
   const lookup = useBookSuggestions(values.title, values.author, lookupEnabled)
   const cover = useCoverSearch(values, setValues, editing)
-  const fileInput = useRef<HTMLInputElement>(null)
 
   const set = (name: keyof FormValues, value: string | boolean) => {
     setValues((v) => ({ ...v, [name]: value }))
@@ -81,12 +85,6 @@ const BookForm = ({ editing, onDone }: { editing: Book | null; onDone: () => voi
   }
 
   const preview: Book = { ...toDraft(values), id: editing?.id ?? "nuevo", coverChecked: true, createdAt: 0 }
-
-  const handleUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ""
-    if (file) void cover.uploadCover(file)
-  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -126,56 +124,7 @@ const BookForm = ({ editing, onDone }: { editing: Book | null; onDone: () => voi
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-      <div className="flex gap-3 rounded-2xl bg-card p-3 sm:col-span-2 sm:gap-4">
-        <BookCover key={values.coverUrl} book={preview} className="w-16 shrink-0 sm:w-20" />
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <label className="flex flex-col gap-1.5 text-[13px] font-medium">
-            Portada (URL de la imagen)
-            <Input
-              value={isUploadedImage(values.coverUrl) ? "" : values.coverUrl}
-              onChange={(e) => setValues((v) => ({ ...v, coverUrl: e.target.value, coverRemoved: false }))}
-              placeholder={isUploadedImage(values.coverUrl) ? "Foto subida ✓" : "https://…"}
-              inputMode="url"
-            />
-          </label>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={cover.findNextCover}
-              disabled={cover.searching || (!values.title.trim() && !values.isbn.trim())}
-              className="rounded-full"
-            >
-              {cover.searching ? <Loader2 className="animate-spin" /> : <Search />}{" "}
-              {cover.hasCandidates && values.coverUrl ? "Otra portada" : "Buscar portada"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInput.current?.click()}
-              disabled={cover.searching}
-              className="rounded-full"
-            >
-              <Camera /> Subir foto
-            </Button>
-            <input ref={fileInput} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
-            {values.coverUrl && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setValues((v) => ({ ...v, coverUrl: "", coverRemoved: true }))}
-                className="rounded-full text-muted-foreground"
-              >
-                <ImageOff /> Quitar
-              </Button>
-            )}
-          </div>
-          {cover.message && <p className="text-xs text-muted-foreground">{cover.message}</p>}
-        </div>
-      </div>
+      <CoverField values={values} setValues={setValues} cover={cover} preview={preview} />
 
       {FIELDS.map((field) => (
         <Fragment key={field.name}>
@@ -214,42 +163,20 @@ const BookForm = ({ editing, onDone }: { editing: Book | null; onDone: () => voi
         ))}
       </datalist>
 
-      <fieldset className="flex items-center gap-3 sm:col-span-2">
-        <legend className="sr-only">¿Leído?</legend>
-        <span className="text-[13px] font-medium">¿Leído?</span>
-        {[
-          { value: true, label: "Sí" },
-          { value: false, label: "No" },
-        ].map((option) => (
-          <button
-            key={option.label}
-            type="button"
-            aria-pressed={values.read === option.value}
-            onClick={() => set("read", option.value)}
-            className={cn(
-              "cursor-pointer rounded-full px-4 py-1.5 text-sm font-semibold transition-colors",
-              values.read === option.value ? "bg-sage-deep text-on-color" : "border border-border text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {option.label}
-          </button>
-        ))}
-      </fieldset>
-
-      {similar && similar.length > 0 && (
-        <div className="rounded-2xl bg-mustard/30 px-4 py-3 text-sm sm:col-span-2" role="alert">
-          <p className="font-semibold">Parece que ya lo tienes:</p>
-          <ul className="mt-1 list-disc pl-5">
-            {similar.slice(0, 3).map((b) => (
-              <li key={b.id}>
-                «{b.title ?? "Sin título"}»{b.author && ` de ${b.author}`}
-                {b.year && ` (${b.year})`}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-1 text-xs text-foreground/75">Si es otra edición y quieres las dos, pulsa guardar otra vez.</p>
+      {hasSeveralPeople(settings) && (
+        <div className="sm:col-span-2">
+          <PersonPicker
+            label="¿De quién es?"
+            people={settings.people}
+            value={values.person}
+            onPick={(person) => set("person", person)}
+          />
         </div>
       )}
+
+      <ReadToggle read={values.read} onChange={(read) => set("read", read)} />
+
+      {similar && similar.length > 0 && <SimilarBooksWarning books={similar} />}
 
       <div className="mt-2 flex items-center justify-between gap-2 sm:col-span-2">
         {editing ? (

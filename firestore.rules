@@ -1,23 +1,27 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Quién puede usar la web. Para dar acceso a alguien más, añade su
-    // correo de Google a esta lista: tendrá su propia biblioteca, vacía.
-    function isAllowed() {
-      return request.auth != null
-        && request.auth.token.email in ['anionce91@gmail.com', 'rgraciasoler@gmail.com'];
+    function signedInEmail() {
+      return request.auth.token.email;
     }
 
-    // Cada libro es de la cuenta que lo añadió (campo `owner` = su correo):
-    // nadie puede ver ni tocar los libros de otra persona.
+    function isAllowed() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/allowedUsers/$(signedInEmail()));
+    }
+
     function isOwner(data) {
-      return data.owner == request.auth.token.email;
+      return data.owner == signedInEmail();
     }
 
     match /books/{bookId} {
       allow read, delete: if isAllowed() && isOwner(resource.data);
       allow create: if isAllowed() && isOwner(request.resource.data);
       allow update: if isAllowed() && isOwner(resource.data) && isOwner(request.resource.data);
+    }
+
+    match /libraries/{email} {
+      allow read, write: if isAllowed() && email == signedInEmail();
     }
   }
 }

@@ -47,6 +47,7 @@ export const useBookLookupBackfill = (enabled: boolean) => {
           const patch: Partial<BookDraft> = { workKey: result.workKey, workChecked: true, workVersion: WORK_LOOKUP_VERSION }
 
           if (!book.pages && result.pages) patch.pages = result.pages
+          if (!book.isbn && result.isbn) patch.isbn = result.isbn
           if (cover && (result.coverUrl || result.coverComplete)) {
             patch.coverUrl = result.coverUrl
             patch.coverChecked = true

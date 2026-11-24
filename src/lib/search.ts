@@ -1,12 +1,15 @@
 import { bookGenres } from "@/lib/genres"
+import { bookPerson } from "@/lib/people"
 import { normalize } from "@/lib/text"
-import type { Book, ReadFilter, SortField, SortKey } from "@/lib/types"
+import type { Book, LibrarySettings, ReadFilter, SortField, SortKey } from "@/lib/types"
 
 export interface LibraryQuery {
   text: string
   read: ReadFilter
   genres: string[]
   sort: SortKey
+  person?: string | null
+  settings?: LibrarySettings
 }
 
 const haystack = (book: Book): string => {
@@ -57,6 +60,7 @@ export const filterBooks = (books: Book[], query: LibraryQuery): Book[] => {
       if (query.read === "read" && !book.read) return false
       if (query.read === "unread" && book.read) return false
       if (query.genres.length > 0 && !bookGenres(book).some((g) => query.genres.includes(g))) return false
+      if (query.person && query.settings && bookPerson(book, query.settings) !== query.person) return false
       return matchesText(book, query.text)
     })
     .sort(sorter(query.sort))

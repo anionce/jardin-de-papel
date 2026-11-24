@@ -8,6 +8,8 @@ interface FiltersState {
   read: ReadFilter
   genres: string[]
   sort: SortKey
+  person: string | null
+  setPerson: (person: string | null) => void
   setText: (text: string) => void
   setRead: (read: ReadFilter) => void
   setGenres: (genres: string[]) => void
@@ -23,13 +25,15 @@ export const useFiltersStore = create<FiltersState>()(
       read: "all",
       genres: [],
       sort: DEFAULT_SORT,
+      person: null,
+      setPerson: (person) => set({ person }),
       setText: (text) => set({ text }),
       setRead: (read) => set({ read }),
       setGenres: (genres) => set({ genres }),
       toggleGenre: (genre) =>
         set((s) => ({ genres: s.genres.includes(genre) ? s.genres.filter((g) => g !== genre) : [...s.genres, genre] })),
       setSort: (sort) => set({ sort }),
-      reset: () => set({ text: "", read: "all", genres: [] }),
+      reset: () => set({ text: "", read: "all", genres: [], person: null }),
     }),
     {
       name: "biblioteca-filters",
@@ -43,7 +47,7 @@ export const useFiltersStore = create<FiltersState>()(
           genres: rest.genres ?? (genre ? [genre] : []),
         } as FiltersState
       },
-      partialize: ({ read, genres, sort }) => ({ read, genres, sort }),
+      partialize: ({ read, genres, sort, person }) => ({ read, genres, sort, person }),
     }
   )
 )

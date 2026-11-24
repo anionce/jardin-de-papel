@@ -1,17 +1,29 @@
-const MAX_SIDE = 500
-const QUALITY = 0.82
+const COVER_MAX_SIDE = 500
+const COVER_QUALITY = 0.82
+const SHELF_PHOTO_QUALITY = 0.85
+const DATA_URL_PREFIX = "data:image/jpeg;base64,"
 
-export const imageFileToDataUrl = async (file: File): Promise<string> => {
+export const scaledSize = (width: number, height: number, maxSide: number) => {
+  const scale = Math.min(1, maxSide / Math.max(width, height))
+  return { width: Math.round(width * scale), height: Math.round(height * scale) }
+}
+
+const resizeToJpegDataUrl = async (file: File, maxSide: number, quality: number): Promise<string> => {
   const bitmap = await createImageBitmap(file)
-  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height))
   const canvas = document.createElement("canvas")
-  canvas.width = Math.round(bitmap.width * scale)
-  canvas.height = Math.round(bitmap.height * scale)
+  Object.assign(canvas, scaledSize(bitmap.width, bitmap.height, maxSide))
   const context = canvas.getContext("2d")
   if (!context) throw new Error("Canvas no disponible")
   context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
   bitmap.close()
-  return canvas.toDataURL("image/jpeg", QUALITY)
+  return canvas.toDataURL("image/jpeg", quality)
+}
+
+export const imageFileToDataUrl = (file: File): Promise<string> => resizeToJpegDataUrl(file, COVER_MAX_SIDE, COVER_QUALITY)
+
+export const shelfPhotoToBase64 = async (file: File, maxSide: number) => {
+  const dataUrl = await resizeToJpegDataUrl(file, maxSide, SHELF_PHOTO_QUALITY)
+  return { data: dataUrl.slice(DATA_URL_PREFIX.length), mediaType: "image/jpeg" as const }
 }
 
 export const isUploadedImage = (url: string) => url.startsWith("data:")

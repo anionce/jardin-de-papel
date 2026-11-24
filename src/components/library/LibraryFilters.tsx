@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import { Check, ChevronDown, X } from "lucide-react"
+import { hasSeveralPeople } from "@/lib/people"
 import { normalize } from "@/lib/text"
 import { cn } from "@/lib/utils"
 import type { ReadFilter, SortKey } from "@/lib/types"
 import { useFiltersStore } from "@/store/useFiltersStore"
+import { useSettingsStore } from "@/store/useSettingsStore"
 
 const READ_OPTIONS: { value: ReadFilter; label: string }[] = [
   { value: "all", label: "Todos" },
@@ -28,7 +30,9 @@ const selectClass =
   "h-9 cursor-pointer rounded-full border border-border bg-background px-3.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/20"
 
 export const LibraryFilters = ({ genres }: { genres: string[] }) => {
-  const { read, sort, setRead, setSort } = useFiltersStore()
+  const { read, sort, person, setRead, setSort, setPerson } = useFiltersStore()
+  const settings = useSettingsStore((s) => s.settings)
+  const chosenPerson = person && settings.people.includes(person) ? person : ""
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-2">
@@ -49,6 +53,22 @@ export const LibraryFilters = ({ genres }: { genres: string[] }) => {
       </div>
 
       {genres.length > 0 && <GenreFilter genres={genres} />}
+
+      {hasSeveralPeople(settings) && (
+        <select
+          value={chosenPerson}
+          onChange={(e) => setPerson(e.target.value || null)}
+          aria-label="De quién"
+          className={selectClass}
+        >
+          <option value="">De todos</option>
+          {settings.people.map((p) => (
+            <option key={p} value={p}>
+              De {p}
+            </option>
+          ))}
+        </select>
+      )}
 
       <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Ordenar" className={selectClass}>
         {SORT_OPTIONS.map((option) => (

@@ -1,7 +1,8 @@
 import type { BookSuggestion } from "@/lib/bookLookup"
 import { genresPatch } from "@/lib/genres"
+import { bookPerson } from "@/lib/people"
 import { normalize } from "@/lib/text"
-import type { Book, BookDraft } from "@/lib/types"
+import type { Book, BookDraft, LibrarySettings } from "@/lib/types"
 
 export interface FormValues {
   title: string
@@ -14,9 +15,10 @@ export interface FormValues {
   coverUrl: string
   coverRemoved: boolean
   read: boolean
+  person: string
 }
 
-export const toValues = (book: Book | null): FormValues => {
+export const toValues = (book: Book | null, settings?: LibrarySettings): FormValues => {
   return {
     title: book?.title ?? "",
     author: book?.author ?? "",
@@ -28,6 +30,7 @@ export const toValues = (book: Book | null): FormValues => {
     coverUrl: book?.coverUrl ?? "",
     coverRemoved: Boolean(book?.coverChecked && !book.coverUrl),
     read: book?.read ?? false,
+    person: settings ? bookPerson(book ?? {}, settings) : (book?.person ?? ""),
   }
 }
 
@@ -46,6 +49,7 @@ export const toDraft = (values: FormValues): BookDraft => {
     coverUrl: text(values.coverUrl),
     coverChecked: values.coverUrl.trim() || values.coverRemoved ? true : undefined,
     read: values.read,
+    person: text(values.person),
   }
 }
 

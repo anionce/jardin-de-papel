@@ -6,11 +6,13 @@ import { BookFormDialog } from "@/components/library/BookFormDialog"
 import { useAuth } from "@/hooks/useAuth"
 import { useBookLookupBackfill } from "@/hooks/useBookLookupBackfill"
 import { useLibrarySync } from "@/hooks/useLibrarySync"
+import { useSettingsSync } from "@/hooks/useSettingsSync"
 
 export const AppShell = () => {
   const { user, loading, isLocalMode, signIn, signOut } = useAuth()
   const signedIn = isLocalMode || Boolean(user)
   useLibrarySync(signedIn)
+  useSettingsSync(signedIn)
   useBookLookupBackfill(signedIn)
 
   if (loading) return null

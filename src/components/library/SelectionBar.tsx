@@ -1,13 +1,16 @@
 import { useMemo, useState } from "react"
-import { BookCheck, BookMarked, Tag, Trash2, X } from "lucide-react"
+import { BookCheck, BookMarked, Tag, Trash2, Users, X } from "lucide-react"
+import { PersonPicker } from "@/components/library/PersonPicker"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { removeBooks, updateBooks, updateEachBook } from "@/lib/db"
 import { addGenre, hasGenre, removeGenre } from "@/lib/genres"
+import { hasSeveralPeople } from "@/lib/people"
 import { uniqueGenres } from "@/lib/search"
 import type { Book } from "@/lib/types"
 import { useLibraryStore } from "@/store/useLibraryStore"
 import { useSelectionStore } from "@/store/useSelectionStore"
+import { useSettingsStore } from "@/store/useSettingsStore"
 
 export const SelectionBar = ({ visibleBooks }: { visibleBooks: Book[] }) => {
   const { ids, stop, setMany, clear } = useSelectionStore()
@@ -16,6 +19,8 @@ export const SelectionBar = ({ visibleBooks }: { visibleBooks: Book[] }) => {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [genreOpen, setGenreOpen] = useState(false)
   const [genre, setGenre] = useState("")
+  const [personOpen, setPersonOpen] = useState(false)
+  const settings = useSettingsStore((s) => s.settings)
   const [busy, setBusy] = useState(false)
 
   const selected = [...ids]
@@ -100,6 +105,15 @@ export const SelectionBar = ({ visibleBooks }: { visibleBooks: Book[] }) => {
           >
             <Tag /> Géneros
           </Button>
+          {hasSeveralPeople(settings) && (
+            <Button
+              disabled={count === 0 || busy}
+              onClick={() => setPersonOpen((o) => !o)}
+              className="h-9 rounded-full bg-paper/15 px-3.5 text-on-color hover:bg-paper/25"
+            >
+              <Users /> De quién
+            </Button>
+          )}
           <Button
             disabled={count === 0 || busy}
             onClick={handleDelete}
@@ -108,6 +122,19 @@ export const SelectionBar = ({ visibleBooks }: { visibleBooks: Book[] }) => {
             <Trash2 /> {confirmDelete ? `¿Borrar ${count}? Pulsa otra vez` : "Borrar"}
           </Button>
         </div>
+
+        {personOpen && hasSeveralPeople(settings) && (
+          <PersonPicker
+            label="Son de"
+            people={settings.people}
+            disabled={busy || count === 0}
+            onDark
+            onPick={(person) => {
+              void run(() => updateBooks(selected, { person }))
+              setPersonOpen(false)
+            }}
+          />
+        )}
 
         {genreOpen && (
           <div className="flex gap-2">

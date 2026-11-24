@@ -18,10 +18,16 @@ export interface Book {
   goodreadsId?: string
   addedBy?: string
   owner?: string
+  person?: string
   createdAt: number
 }
 
 export type BookDraft = Omit<Book, "id" | "createdAt" | "addedBy">
+
+export interface LibrarySettings {
+  people: string[]
+  defaultPerson: string
+}
 
 export type ReadFilter = "all" | "read" | "unread"
 export type SortField = "recent" | "title" | "author" | "year" | "pages"

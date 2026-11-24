@@ -83,13 +83,20 @@ export interface LookupResult {
   workKey?: string
   pages?: number
   coverUrl?: string
+  isbn?: string
   coverComplete: boolean
 }
 
-export const lookupBook = async (book: LookupInput, options: { cover: boolean }): Promise<LookupResult> => {
+export const lookupBook = async (
+  book: LookupInput & Pick<Book, "publisher">,
+  options: { cover: boolean }
+): Promise<LookupResult> => {
   const doc = await openLibraryDoc(book).catch(() => undefined)
   const result: LookupResult = { workKey: doc?.key, pages: doc?.number_of_pages_median, coverComplete: true }
   if (!options.cover) return result
+
+  const edition = book.publisher && !book.isbn ? await findEdition(book).catch(() => undefined) : undefined
+  if (edition?.coverUrl) return { ...result, coverUrl: edition.coverUrl, isbn: edition.isbn }
 
   if (!googleQuotaHit) {
     const title = book.title ? cleanTitle(book.title) : undefined

@@ -4,6 +4,8 @@ import { LibraryPage } from "@/pages/LibraryPage"
 import { ImportPage } from "@/pages/ImportPage"
 import { GenresPage } from "@/pages/GenresPage"
 import { DuplicatesPage } from "@/pages/DuplicatesPage"
+import { PeoplePage } from "@/pages/PeoplePage"
+import { PhotoImportPage } from "@/pages/PhotoImportPage"
 
 export const App = () => {
   return (
@@ -12,7 +14,9 @@ export const App = () => {
         <Route index element={<LibraryPage />} />
         <Route path="generos" element={<GenresPage />} />
         <Route path="duplicados" element={<DuplicatesPage />} />
+        <Route path="personas" element={<PeoplePage />} />
         <Route path="importar" element={<ImportPage />} />
+        <Route path="fotos" element={<PhotoImportPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

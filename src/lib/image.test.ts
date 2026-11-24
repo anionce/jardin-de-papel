@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { isUploadedImage, nextLoadableCover } from "@/lib/image"
+import { isUploadedImage, nextLoadableCover, scaledSize } from "@/lib/image"
 
 describe("nextLoadableCover", () => {
   const urls = ["a", "b", "c"]
@@ -36,5 +36,16 @@ describe("isUploadedImage", () => {
   it("detects data URLs", () => {
     expect(isUploadedImage("data:image/jpeg;base64,xx")).toBe(true)
     expect(isUploadedImage("https://x/c.jpg")).toBe(false)
+  })
+})
+
+describe("scaledSize", () => {
+  it("shrinks the longest side to the limit keeping the proportions", () => {
+    expect(scaledSize(4000, 3000, 1568)).toEqual({ width: 1568, height: 1176 })
+    expect(scaledSize(3000, 4000, 500)).toEqual({ width: 375, height: 500 })
+  })
+
+  it("never enlarges small images", () => {
+    expect(scaledSize(800, 600, 1568)).toEqual({ width: 800, height: 600 })
   })
 })

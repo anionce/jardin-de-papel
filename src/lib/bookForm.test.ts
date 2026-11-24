@@ -16,6 +16,7 @@ describe("toValues / toDraft", () => {
       coverUrl: "https://x/c.jpg",
       coverChecked: true,
       read: true,
+      person: undefined,
     })
   })
 
@@ -64,5 +65,22 @@ describe("identityChanged", () => {
 describe("coverSearchKey", () => {
   it("ignores case and accents", () => {
     expect(coverSearchKey({ title: "Canción", read: false })).toBe(coverSearchKey({ title: "cancion", read: true }))
+  })
+})
+
+describe("person in the form", () => {
+  const settings = { people: ["Alex", "Sam"], defaultPerson: "Sam" }
+
+  it("starts new books with the default person", () => {
+    expect(toValues(null, settings).person).toBe("Sam")
+  })
+
+  it("shows the stored person, or the default one for unassigned books", () => {
+    expect(toValues(makeBook({ person: "Alex" }), settings).person).toBe("Alex")
+    expect(toValues(makeBook(), settings).person).toBe("Sam")
+  })
+
+  it("saves the chosen person", () => {
+    expect(toDraft({ ...toValues(null, settings), person: "Alex" }).person).toBe("Alex")
   })
 })
