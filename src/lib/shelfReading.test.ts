@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
-import { GEMINI_INTERACTIONS_URL, parseShelfReading, readShelfPhoto, SHELF_MODEL, SHELF_MODELS, ShelfReadingError } from "@/lib/shelfReading"
+import { GEMINI_INTERACTIONS_URL, GEMINI_MODELS, GeminiError } from "@/lib/gemini"
+import { parseShelfReading, readShelfPhoto } from "@/lib/shelfReading"
 
 const interaction = (text: string, status = "completed") => ({
   status,
@@ -23,8 +24,8 @@ describe("parseShelfReading", () => {
   })
 
   it("rejects answers that are not JSON or have another shape", () => {
-    expect(() => parseShelfReading("not json")).toThrow(ShelfReadingError)
-    expect(() => parseShelfReading(JSON.stringify({ titles: [] }))).toThrow(ShelfReadingError)
+    expect(() => parseShelfReading("not json")).toThrow(GeminiError)
+    expect(() => parseShelfReading(JSON.stringify({ titles: [] }))).toThrow(GeminiError)
   })
 })
 
@@ -37,7 +38,7 @@ describe("readShelfPhoto", () => {
     const body = JSON.parse(String(init?.body))
     expect(url).toBe(GEMINI_INTERACTIONS_URL)
     expect(init?.headers).toMatchObject({ "x-goog-api-key": "key-123" })
-    expect(body).toMatchObject({ model: SHELF_MODEL, store: false, stream: false })
+    expect(body).toMatchObject({ model: GEMINI_MODELS[0], store: false, stream: false })
     expect(body.response_format).toMatchObject({ type: "text", mime_type: "application/json" })
     expect(body.input[1]).toEqual({ type: "image", data: "aGVsbG8=", mime_type: "image/jpeg" })
   })
@@ -54,8 +55,8 @@ describe("readShelfPhoto", () => {
   })
 
   it("fails clearly on truncated or failed answers", async () => {
-    await expect(readShelfPhoto("key", image, respond(interaction("{", "incomplete")))).rejects.toThrow(ShelfReadingError)
-    await expect(readShelfPhoto("key", image, respond(interaction("", "failed")))).rejects.toThrow(ShelfReadingError)
+    await expect(readShelfPhoto("key", image, respond(interaction("{", "incomplete")))).rejects.toThrow(GeminiError)
+    await expect(readShelfPhoto("key", image, respond(interaction("", "failed")))).rejects.toThrow(GeminiError)
   })
 })
 
@@ -68,12 +69,12 @@ describe("readShelfPhoto fallbacks", () => {
       .mockResolvedValueOnce(new Response(JSON.stringify(interaction(JSON.stringify({ books: [book] })))))
     expect(await readShelfPhoto("key", image, fetchFn)).toEqual([book])
     const models = fetchFn.mock.calls.map(([, init]) => JSON.parse(String(init?.body)).model)
-    expect(models).toEqual(SHELF_MODELS.slice(0, 2))
+    expect(models).toEqual(GEMINI_MODELS.slice(0, 2))
   })
 
   it("does not retry other models for errors that would repeat", async () => {
     const fetchFn = respond({}, 403)
-    await expect(readShelfPhoto("key", image, fetchFn)).rejects.toThrow(ShelfReadingError)
+    await expect(readShelfPhoto("key", image, fetchFn)).rejects.toThrow(GeminiError)
     expect(fetchFn).toHaveBeenCalledTimes(1)
   })
 })

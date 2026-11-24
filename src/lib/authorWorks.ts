@@ -1,5 +1,6 @@
 import { authorKey, titleKey } from "@/lib/text"
 import type { Book } from "@/lib/types"
+import type { WorkMatch, WorkMatchRequest } from "@/lib/workMatching"
 
 const OPEN_LIBRARY = "https://openlibrary.org"
 const WORKS_LIMIT = 60
@@ -13,6 +14,7 @@ export interface AuthorWork {
   title: string
   year?: number
   coverUrl?: string
+  spanishTitle?: string
   buyUrl: string
 }
 
@@ -76,6 +78,24 @@ export const otherWorks = (
     })
   }
   return works
+}
+
+export const workMatchRequest = (author: string, owned: Book[], works: AuthorWork[]): WorkMatchRequest => ({
+  author,
+  owned: [...new Set(owned.flatMap((b) => (b.title ? [b.title] : [])))].sort(),
+  candidates: works.map((w) => ({ key: w.key, title: w.title, ...(w.year ? { year: w.year } : {}) })),
+})
+
+export const applyWorkMatches = (works: AuthorWork[], matches: WorkMatch[], owned: Book[], author: string): AuthorWork[] => {
+  const byKey = new Map(matches.map((m) => [m.key, m]))
+  const ownedTitles = new Set(owned.map((b) => titleKey(b.title)).filter(Boolean))
+  return works.flatMap((work) => {
+    const match = byKey.get(work.key)
+    if (!match) return [work]
+    if (!match.show || match.ownedTitle || ownedTitles.has(titleKey(match.spanishTitle))) return []
+    if (!match.spanishTitle || titleKey(match.spanishTitle) === titleKey(work.title)) return [work]
+    return [{ ...work, spanishTitle: match.spanishTitle, buyUrl: bookshopSearchUrl(match.spanishTitle, author) }]
+  })
 }
 
 const getJson = async <T,>(url: string, signal: AbortSignal): Promise<T> => {

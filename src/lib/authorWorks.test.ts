@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest"
-import { booksByAuthor, bookshopSearchUrl, hideWork, isByAuthor, otherWorks, type OpenLibraryWorkDoc } from "@/lib/authorWorks"
+import {
+  applyWorkMatches,
+  booksByAuthor,
+  bookshopSearchUrl,
+  hideWork,
+  isByAuthor,
+  otherWorks,
+  workMatchRequest,
+  type AuthorWork,
+  type OpenLibraryWorkDoc,
+} from "@/lib/authorWorks"
 import { makeBook } from "@/test/factories"
 
 const doc = (overrides: Partial<OpenLibraryWorkDoc>): OpenLibraryWorkDoc => ({
@@ -89,5 +99,56 @@ describe("hidden works", () => {
   it("adds a work to the hidden list only once", () => {
     expect(hideWork(["/works/1"], "/works/1")).toEqual(["/works/1"])
     expect(hideWork(undefined, "/works/2")).toEqual(["/works/2"])
+  })
+})
+
+describe("workMatchRequest / applyWorkMatches", () => {
+  const work = (key: string, title: string): AuthorWork => ({ key, title, buyUrl: bookshopSearchUrl(title, "Kate Morton") })
+  const works = [work("/works/1", "The House at Riverton"), work("/works/2", "The Distant Hours"), work("/works/3", "Homecoming")]
+
+  it("sends each owned title once and the candidate works", () => {
+    const owned = [makeBook({ title: "La casa de Riverton" }), makeBook({ title: "La casa de Riverton" }), makeBook({ title: "" })]
+    expect(workMatchRequest("Kate Morton", owned, works.slice(0, 1))).toEqual({
+      author: "Kate Morton",
+      owned: ["La casa de Riverton"],
+      candidates: [{ key: "/works/1", title: "The House at Riverton" }],
+    })
+  })
+
+  it("hides works marked as owned and adds the Spanish title to the bookshop link", () => {
+    const result = applyWorkMatches(
+      works,
+      [
+        { key: "/works/1", ownedTitle: "", show: false, spanishTitle: "La casa de Riverton" },
+        { key: "/works/2", ownedTitle: "", show: true, spanishTitle: "Las horas distantes" },
+      ],
+      [],
+      "Kate Morton"
+    )
+    expect(result.map((w) => w.title)).toEqual(["The Distant Hours", "Homecoming"])
+    expect(result[0].spanishTitle).toBe("Las horas distantes")
+    expect(result[0].buyUrl).toBe(bookshopSearchUrl("Las horas distantes", "Kate Morton"))
+    expect(result[1].spanishTitle).toBeUndefined()
+  })
+})
+
+describe("applyWorkMatches safety net", () => {
+  const works: AuthorWork[] = [
+    { key: "/works/1", title: "The Secret Keeper", buyUrl: "" },
+    { key: "/works/2", title: "The Lake House", buyUrl: "" },
+  ]
+
+  it("hides works whose Spanish title or matched owned title is already on the shelf, even if marked to show", () => {
+    const owned = [makeBook({ title: "El cumpleaños secreto" }), makeBook({ title: "El último adiós" })]
+    const result = applyWorkMatches(
+      works,
+      [
+        { key: "/works/1", ownedTitle: "", show: true, spanishTitle: "El cumpleaños secreto" },
+        { key: "/works/2", ownedTitle: "El último adiós", show: true, spanishTitle: "" },
+      ],
+      owned,
+      "Kate Morton"
+    )
+    expect(result).toEqual([])
   })
 })

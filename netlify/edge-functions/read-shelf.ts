@@ -1,12 +1,9 @@
-import { bearerToken, checkLibraryAccess } from "../../src/lib/shelfAccess.ts"
-import { isSupportedMediaType, readShelfPhoto, ShelfReadingError } from "../../src/lib/shelfReading.ts"
+import { authorizeGeminiRequest, geminiFailure, jsonResponse } from "../../src/lib/edgeRequest.ts"
+import { isSupportedMediaType, readShelfPhoto } from "../../src/lib/shelfReading.ts"
 
 declare const Netlify: { env: { get: (key: string) => string | undefined } }
 
 const MAX_IMAGE_BASE64_LENGTH = 8_000_000
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } })
 
 const parseBody = async (request: Request) => {
   try {
@@ -21,30 +18,20 @@ const parseBody = async (request: Request) => {
 }
 
 export default async (request: Request) => {
-  if (request.method !== "POST") return json({ error: "Método no permitido" }, 405)
-
-  const apiKey = Netlify.env.get("GEMINI_API_KEY")
-  const projectId = Netlify.env.get("VITE_FIREBASE_PROJECT_ID")
-  if (!apiKey || !projectId) return json({ error: "La lectura de fotos no está configurada" }, 503)
-
-  const token = bearerToken(request.headers.get("authorization"))
-  if (!token) return json({ error: "Hay que entrar con Google" }, 401)
-  const access = await checkLibraryAccess(token, projectId)
-  if (access === "unauthenticated") return json({ error: "La sesión ha caducado; vuelve a entrar" }, 401)
-  if (access === "denied") return json({ error: "Esta cuenta no tiene acceso" }, 403)
+  const authorized = await authorizeGeminiRequest(
+    request,
+    { apiKey: Netlify.env.get("GEMINI_API_KEY"), projectId: Netlify.env.get("VITE_FIREBASE_PROJECT_ID") },
+    "La lectura de fotos no está configurada"
+  )
+  if (authorized instanceof Response) return authorized
 
   const image = await parseBody(request)
-  if (!image) return json({ error: "La foto no es válida" }, 400)
+  if (!image) return jsonResponse({ error: "La foto no es válida" }, 400)
 
   try {
-    return json({ books: await readShelfPhoto(apiKey, image) })
+    return jsonResponse({ books: await readShelfPhoto(authorized.apiKey, image) })
   } catch (error) {
-    if (error instanceof ShelfReadingError) {
-      console.error("read-shelf", error.detail ?? error.message)
-      return json({ error: error.message, detail: error.detail }, 502)
-    }
-    console.error("read-shelf", error)
-    return json({ error: "No se ha podido leer la foto ahora mismo", detail: String(error) }, 502)
+    return geminiFailure("read-shelf", error, "No se ha podido leer la foto ahora mismo")
   }
 }
 

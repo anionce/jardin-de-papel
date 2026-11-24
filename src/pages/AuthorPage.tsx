@@ -6,12 +6,14 @@ import { AuthorWorkCard } from "@/components/library/AuthorWorkCard"
 import { BookCard } from "@/components/library/BookCard"
 import { SelectionBar } from "@/components/library/SelectionBar"
 import { Button } from "@/components/ui/button"
-import { useAuthorWorkDocs } from "@/hooks/useAuthorWorks"
-import { booksByAuthor, hideWork, mainAuthor, otherWorks } from "@/lib/authorWorks"
+import { useAuthorWorkDocs, useWorkMatching } from "@/hooks/useAuthorWorks"
+import { booksByAuthor, hideWork, mainAuthor, otherWorks, type AuthorWork } from "@/lib/authorWorks"
 import { saveSettings } from "@/lib/settings"
 import { useSettingsStore } from "@/store/useSettingsStore"
 import { useLibraryStore } from "@/store/useLibraryStore"
 import { useSelectionStore } from "@/store/useSelectionStore"
+
+const NO_WORKS: AuthorWork[] = []
 
 const GRID = "grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
 
@@ -23,10 +25,13 @@ export const AuthorPage = () => {
   const owned = useMemo(() => booksByAuthor(books, author), [books, author])
   const { loading, failed, docs, ownedWorkKeys } = useAuthorWorkDocs(author, owned)
   const settings = useSettingsStore((s) => s.settings)
-  const others = useMemo(
+  const candidates = useMemo(
     () => otherWorks(docs, owned, mainAuthor(author), ownedWorkKeys, settings.hiddenWorks),
     [docs, owned, author, ownedWorkKeys, settings.hiddenWorks]
   )
+  const matching = useWorkMatching(author, owned, loading ? NO_WORKS : candidates)
+  const others = matching.works
+  const searching = loading || matching.checking
   const markOwned = (key: string) => void saveSettings({ ...settings, hiddenWorks: hideWork(settings.hiddenWorks, key) })
   const selecting = useSelectionStore((s) => s.active)
   const startSelecting = useSelectionStore((s) => s.start)
@@ -67,17 +72,17 @@ export const AuthorPage = () => {
 
       <section className="mt-14">
         <h2 className="font-serif text-2xl font-bold text-burgundy">Otros libros suyos</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Según Open Library; los títulos pueden salir en su idioma original. Si alguno ya lo tienes en otro idioma, pulsa «Ya lo tengo» y no volverá a salir.</p>
-        {loading && (
+        <p className="mt-1 text-sm text-muted-foreground">Según Open Library, quitando los que ya tienes aunque sea en otro idioma. Si se cuela alguno, pulsa «Ya lo tengo» y no volverá a salir.</p>
+        {searching && (
           <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Buscando sus libros…
+            <Loader2 className="size-4 animate-spin" /> {loading ? "Buscando sus libros…" : "Comprobando cuáles tienes ya en otro idioma…"}
           </p>
         )}
         {failed && <p className="mt-6 text-sm text-destructive">No se han podido buscar ahora mismo. Prueba más tarde.</p>}
-        {!loading && !failed && others.length === 0 && (
+        {!searching && !failed && others.length === 0 && (
           <p className="mt-6 text-sm text-muted-foreground">No he encontrado más libros suyos que no tengas.</p>
         )}
-        {others.length > 0 && (
+        {!searching && others.length > 0 && (
           <div className={`mt-6 ${GRID}`}>
             {others.map((work) => (
               <AuthorWorkCard key={work.key} work={work} author={mainAuthor(author)} onOwned={() => markOwned(work.key)} />

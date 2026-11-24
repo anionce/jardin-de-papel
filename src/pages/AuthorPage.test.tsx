@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
@@ -7,6 +7,9 @@ import { AuthorPage } from "@/pages/AuthorPage"
 import { useLibraryStore } from "@/store/useLibraryStore"
 import { useSelectionStore } from "@/store/useSelectionStore"
 import { makeBook } from "@/test/factories"
+
+const requestWorkMatching = vi.hoisted(() => vi.fn())
+vi.mock("@/lib/shelfApi", () => ({ requestWorkMatching }))
 
 const openLibrary = (works: object[]) =>
   vi.fn(async (url: string) =>
@@ -34,11 +37,17 @@ const renderAuthor = (books: Book[], name = "Jane Writer") => {
 }
 
 afterEach(() => {
+  requestWorkMatching.mockReset()
+  localStorage.clear()
   vi.unstubAllGlobals()
   useSelectionStore.getState().stop()
 })
 
 describe("AuthorPage", () => {
+  beforeEach(() => {
+    requestWorkMatching.mockRejectedValue(new Error("sin Gemini"))
+  })
+
   const mine = makeBook({ title: "First Novel", author: "Jane Writer", workKey: "/works/MINE" })
   const other = makeBook({ title: "Not Hers", author: "Someone Else" })
 
@@ -86,5 +95,31 @@ describe("AuthorPage", () => {
     await user.click(screen.getByRole("button", { name: "Todos los visibles (2)" }))
 
     expect(screen.getByText("2 seleccionados")).toBeInTheDocument()
+  })
+
+  it("hides works already owned in another language and shows the Spanish title of the rest", async () => {
+    requestWorkMatching.mockResolvedValue([
+      { key: "/works/2", ownedTitle: "", show: false, spanishTitle: "" },
+      { key: "/works/3", ownedTitle: "", show: true, spanishTitle: "Las horas distantes" },
+    ])
+    vi.stubGlobal(
+      "fetch",
+      openLibrary([
+        { key: "/works/2", title: "The First Novel", edition_count: 4, author_name: ["Jane Writer"] },
+        { key: "/works/3", title: "The Distant Hours", edition_count: 4, author_name: ["Jane Writer"] },
+      ])
+    )
+    renderAuthor([mine])
+
+    expect(await screen.findByRole("heading", { name: "The Distant Hours" })).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "The First Novel" })).not.toBeInTheDocument()
+    expect(screen.getByText("En español: «Las horas distantes»")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Buscar en librerías/ })).toHaveAttribute(
+      "href",
+      expect.stringContaining("Las%20horas%20distantes")
+    )
+    expect(requestWorkMatching).toHaveBeenCalledWith(
+      expect.objectContaining({ author: "Jane Writer", owned: ["First Novel"] })
+    )
   })
 })
