@@ -6,6 +6,7 @@ import { GenresPage } from "@/pages/GenresPage"
 import { DuplicatesPage } from "@/pages/DuplicatesPage"
 import { PeoplePage } from "@/pages/PeoplePage"
 import { PhotoImportPage } from "@/pages/PhotoImportPage"
+import { AuthorPage } from "@/pages/AuthorPage"
 
 export const App = () => {
   return (
@@ -17,6 +18,7 @@ export const App = () => {
         <Route path="personas" element={<PeoplePage />} />
         <Route path="importar" element={<ImportPage />} />
         <Route path="fotos" element={<PhotoImportPage />} />
+        <Route path="autor/:name" element={<AuthorPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

@@ -1,4 +1,5 @@
 import { memo } from "react"
+import { Link } from "react-router-dom"
 import { BookMarked, Check } from "lucide-react"
 import { BookCover } from "@/components/library/BookCover"
 import { updateBook } from "@/lib/db"
@@ -51,7 +52,14 @@ export const BookCard = memo(({ book }: { book: Book }) => {
       <h3 className="mt-3 line-clamp-2 font-serif text-[15px] leading-snug font-bold text-burgundy">
         {book.title ?? <span className="italic opacity-60">Sin título</span>}
       </h3>
-      {book.author && <p className="mt-0.5 line-clamp-1 text-[13px] text-foreground/80">{book.author}</p>}
+      {book.author && (
+        <Link
+          to={`/autor/${encodeURIComponent(book.author)}`}
+          className="mt-0.5 line-clamp-1 text-[13px] text-foreground/80 underline-offset-2 hover:text-burgundy hover:underline"
+        >
+          {book.author}
+        </Link>
+      )}
       {meta && <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{meta}</p>}
       {owner && <p className="mt-0.5 text-[11px] font-semibold text-sage-deep">De {owner}</p>}
 

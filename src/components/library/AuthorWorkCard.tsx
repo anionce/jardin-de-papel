@@ -1,0 +1,24 @@
+import { ExternalLink } from "lucide-react"
+import { BookCover } from "@/components/library/BookCover"
+import type { AuthorWork } from "@/lib/authorWorks"
+
+export const AuthorWorkCard = ({ work, author }: { work: AuthorWork; author: string }) => {
+  return (
+    <article className="flex flex-col items-center text-center">
+      <BookCover
+        book={{ id: work.key, title: work.title, author, coverUrl: work.coverUrl, coverChecked: true, read: false, createdAt: 0 }}
+        className="w-24 sm:w-28"
+      />
+      <h3 className="mt-3 line-clamp-2 font-serif text-[15px] leading-snug font-bold text-burgundy">{work.title}</h3>
+      {work.year && <p className="mt-0.5 text-xs text-muted-foreground">{work.year}</p>}
+      <a
+        href={work.buyUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] font-semibold text-muted-foreground hover:border-sage-deep hover:text-sage-deep"
+      >
+        <ExternalLink className="size-3" /> Buscar en librerías
+      </a>
+    </article>
+  )
+}

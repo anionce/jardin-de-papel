@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { Check, ChevronDown, X } from "lucide-react"
 import { hasSeveralPeople } from "@/lib/people"
 import { normalize } from "@/lib/text"
+import { SelectField } from "@/components/ui/select-field"
 import { cn } from "@/lib/utils"
 import type { ReadFilter, SortKey } from "@/lib/types"
 import { useFiltersStore } from "@/store/useFiltersStore"
@@ -55,11 +56,10 @@ export const LibraryFilters = ({ genres }: { genres: string[] }) => {
       {genres.length > 0 && <GenreFilter genres={genres} />}
 
       {hasSeveralPeople(settings) && (
-        <select
+        <SelectField
           value={chosenPerson}
           onChange={(e) => setPerson(e.target.value || null)}
           aria-label="De quién"
-          className={selectClass}
         >
           <option value="">De todos</option>
           {settings.people.map((p) => (
@@ -67,16 +67,16 @@ export const LibraryFilters = ({ genres }: { genres: string[] }) => {
               De {p}
             </option>
           ))}
-        </select>
+        </SelectField>
       )}
 
-      <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Ordenar" className={selectClass}>
+      <SelectField value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Ordenar">
         {SORT_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
-      </select>
+      </SelectField>
     </div>
   )
 }
