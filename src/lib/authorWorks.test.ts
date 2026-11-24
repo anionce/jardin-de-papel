@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { booksByAuthor, bookshopSearchUrl, isByAuthor, otherWorks, type OpenLibraryWorkDoc } from "@/lib/authorWorks"
+import { booksByAuthor, bookshopSearchUrl, hideWork, isByAuthor, otherWorks, type OpenLibraryWorkDoc } from "@/lib/authorWorks"
 import { makeBook } from "@/test/factories"
 
 const doc = (overrides: Partial<OpenLibraryWorkDoc>): OpenLibraryWorkDoc => ({
@@ -37,9 +37,9 @@ describe("otherWorks", () => {
     expect(works.map((w) => w.title)).toEqual(["After Julius"])
   })
 
-  it("leaves out works whose title is the original title of a translated book on the shelf", () => {
-    const owned = [makeBook({ title: "Los años ligeros", workKey: "/works/A" })]
-    const works = otherWorks([doc({ key: "/works/B", title: "Light Years" })], owned, "Jane Writer", ["The Light Years"])
+  it("leaves out the original work of a translated book on the shelf", () => {
+    const owned = [makeBook({ title: "Los años ligeros", workKey: "/works/SPANISH" })]
+    const works = otherWorks([doc({ key: "/works/ORIGINAL", title: "Light Years" })], owned, "Jane Writer", ["/works/ORIGINAL"])
     expect(works).toEqual([])
   })
 
@@ -66,5 +66,28 @@ describe("otherWorks", () => {
       buyUrl: bookshopSearchUrl("After Julius", "Jane Writer"),
     })
     expect(work.buyUrl).toContain("todostuslibros.com")
+  })
+})
+
+describe("hidden works", () => {
+  it("leaves out works the user marked as already owned", () => {
+    const works = otherWorks([doc({ key: "/works/1", title: "Light Years" }), doc({ key: "/works/2", title: "After Julius" })], [], "Jane Writer", [], ["/works/1"])
+    expect(works.map((w) => w.key)).toEqual(["/works/2"])
+  })
+
+  it("also leaves out other copies of a hidden work with the same title", () => {
+    const works = otherWorks(
+      [doc({ key: "/works/1", title: "Light Years" }), doc({ key: "/works/2", title: "The Light Years" })],
+      [],
+      "Jane Writer",
+      [],
+      ["/works/1"]
+    )
+    expect(works).toEqual([])
+  })
+
+  it("adds a work to the hidden list only once", () => {
+    expect(hideWork(["/works/1"], "/works/1")).toEqual(["/works/1"])
+    expect(hideWork(undefined, "/works/2")).toEqual(["/works/2"])
   })
 })

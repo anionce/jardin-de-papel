@@ -1,8 +1,14 @@
-import { ExternalLink } from "lucide-react"
+import { Check, ExternalLink } from "lucide-react"
 import { BookCover } from "@/components/library/BookCover"
 import type { AuthorWork } from "@/lib/authorWorks"
 
-export const AuthorWorkCard = ({ work, author }: { work: AuthorWork; author: string }) => {
+interface AuthorWorkCardProps {
+  work: AuthorWork
+  author: string
+  onOwned: () => void
+}
+
+export const AuthorWorkCard = ({ work, author, onOwned }: AuthorWorkCardProps) => {
   return (
     <article className="flex flex-col items-center text-center">
       <BookCover
@@ -19,6 +25,13 @@ export const AuthorWorkCard = ({ work, author }: { work: AuthorWork; author: str
       >
         <ExternalLink className="size-3" /> Buscar en librerías
       </a>
+      <button
+        type="button"
+        onClick={onOwned}
+        className="mt-1.5 inline-flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+      >
+        <Check className="size-3" /> Ya lo tengo
+      </button>
     </article>
   )
 }

@@ -119,3 +119,11 @@ describe("person patches", () => {
     expect(removePersonPatches([alex, sam, nobody], "Sam", after)).toEqual([{ id: sam.id, patch: { person: "Alex" } }])
   })
 })
+
+describe("settings fields other than people", () => {
+  it("keeps the hidden works when renaming or removing a person", () => {
+    const settings = { people: ["Alex", "Sam"], defaultPerson: "Alex", hiddenWorks: ["/works/1"] }
+    expect(renamePerson(settings, "Sam", "Robin").hiddenWorks).toEqual(["/works/1"])
+    expect(removePerson(settings, "Sam").hiddenWorks).toEqual(["/works/1"])
+  })
+})

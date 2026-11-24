@@ -1,33 +1,38 @@
 import { useEffect, useState } from "react"
-import { fetchAuthorWorkDocs, fetchWorkTitles, type OpenLibraryWorkDoc } from "@/lib/authorWorks"
+import { fetchAuthorWorkDocs, fetchOwnedWorkKeys, mainAuthor, type OpenLibraryWorkDoc } from "@/lib/authorWorks"
+import type { Book } from "@/lib/types"
 
 interface AuthorWorksState {
   author: string
   docs: OpenLibraryWorkDoc[]
-  ownedTitles: string[]
+  ownedWorkKeys: string[]
   failed: boolean
 }
 
-export const useAuthorWorkDocs = (author: string, ownedWorkKeys: string[]) => {
+export const useAuthorWorkDocs = (author: string, owned: Book[]) => {
   const [state, setState] = useState<AuthorWorksState | null>(null)
-  const workKeys = ownedWorkKeys.join(",")
+  const [ownedSnapshot, setOwnedSnapshot] = useState({ author, owned })
+  if (ownedSnapshot.author !== author || ownedSnapshot.owned.length !== owned.length) setOwnedSnapshot({ author, owned })
 
   useEffect(() => {
     const controller = new AbortController()
-    const keys = workKeys ? workKeys.split(",") : []
-    Promise.all([fetchAuthorWorkDocs(author, controller.signal), fetchWorkTitles(keys, controller.signal)])
-      .then(([docs, ownedTitles]) => setState({ author, docs, ownedTitles, failed: false }))
+    const { owned: books } = ownedSnapshot
+    Promise.all([
+      fetchAuthorWorkDocs(author, controller.signal),
+      fetchOwnedWorkKeys(books, mainAuthor(author), controller.signal),
+    ])
+      .then(([docs, ownedWorkKeys]) => setState({ author, docs, ownedWorkKeys, failed: false }))
       .catch(() => {
-        if (!controller.signal.aborted) setState({ author, docs: [], ownedTitles: [], failed: true })
+        if (!controller.signal.aborted) setState({ author, docs: [], ownedWorkKeys: [], failed: true })
       })
     return () => controller.abort()
-  }, [author, workKeys])
+  }, [author, ownedSnapshot])
 
   const current = state?.author === author ? state : null
   return {
     loading: current === null,
     failed: current?.failed ?? false,
     docs: current?.docs ?? [],
-    ownedTitles: current?.ownedTitles ?? [],
+    ownedWorkKeys: current?.ownedWorkKeys ?? [],
   }
 }

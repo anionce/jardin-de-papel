@@ -34,6 +34,7 @@ export const renamePerson = (settings: LibrarySettings, from: string, to: string
   const clash = findPerson(settings, trimmed)
   if (!trimmed || (clash && clash !== from)) return settings
   return {
+    ...settings,
     people: settings.people.map((p) => (p === from ? trimmed : p)),
     defaultPerson: settings.defaultPerson === from ? trimmed : settings.defaultPerson,
   }
@@ -42,7 +43,7 @@ export const renamePerson = (settings: LibrarySettings, from: string, to: string
 export const removePerson = (settings: LibrarySettings, name: string): LibrarySettings => {
   const people = settings.people.filter((p) => p !== name)
   if (people.length === 0) return settings
-  return { people, defaultPerson: settings.defaultPerson === name ? people[0] : settings.defaultPerson }
+  return { ...settings, people, defaultPerson: settings.defaultPerson === name ? people[0] : settings.defaultPerson }
 }
 
 export const setDefaultPerson = (settings: LibrarySettings, name: string): LibrarySettings => {

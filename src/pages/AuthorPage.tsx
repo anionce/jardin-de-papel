@@ -7,7 +7,9 @@ import { BookCard } from "@/components/library/BookCard"
 import { SelectionBar } from "@/components/library/SelectionBar"
 import { Button } from "@/components/ui/button"
 import { useAuthorWorkDocs } from "@/hooks/useAuthorWorks"
-import { booksByAuthor, mainAuthor, otherWorks } from "@/lib/authorWorks"
+import { booksByAuthor, hideWork, mainAuthor, otherWorks } from "@/lib/authorWorks"
+import { saveSettings } from "@/lib/settings"
+import { useSettingsStore } from "@/store/useSettingsStore"
 import { useLibraryStore } from "@/store/useLibraryStore"
 import { useSelectionStore } from "@/store/useSelectionStore"
 
@@ -19,9 +21,13 @@ export const AuthorPage = () => {
   const author = decodeURIComponent(useParams().name ?? "")
   const books = useLibraryStore((s) => s.books)
   const owned = useMemo(() => booksByAuthor(books, author), [books, author])
-  const ownedWorkKeys = useMemo(() => owned.flatMap((b) => (b.workKey ? [b.workKey] : [])), [owned])
-  const { loading, failed, docs, ownedTitles } = useAuthorWorkDocs(author, ownedWorkKeys)
-  const others = useMemo(() => otherWorks(docs, owned, mainAuthor(author), ownedTitles), [docs, owned, author, ownedTitles])
+  const { loading, failed, docs, ownedWorkKeys } = useAuthorWorkDocs(author, owned)
+  const settings = useSettingsStore((s) => s.settings)
+  const others = useMemo(
+    () => otherWorks(docs, owned, mainAuthor(author), ownedWorkKeys, settings.hiddenWorks),
+    [docs, owned, author, ownedWorkKeys, settings.hiddenWorks]
+  )
+  const markOwned = (key: string) => void saveSettings({ ...settings, hiddenWorks: hideWork(settings.hiddenWorks, key) })
   const selecting = useSelectionStore((s) => s.active)
   const startSelecting = useSelectionStore((s) => s.start)
   const stopSelecting = useSelectionStore((s) => s.stop)
@@ -61,7 +67,7 @@ export const AuthorPage = () => {
 
       <section className="mt-14">
         <h2 className="font-serif text-2xl font-bold text-burgundy">Otros libros suyos</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Según Open Library; los títulos pueden salir en su idioma original.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Según Open Library; los títulos pueden salir en su idioma original. Si alguno ya lo tienes en otro idioma, pulsa «Ya lo tengo» y no volverá a salir.</p>
         {loading && (
           <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" /> Buscando sus libros…
@@ -74,7 +80,7 @@ export const AuthorPage = () => {
         {others.length > 0 && (
           <div className={`mt-6 ${GRID}`}>
             {others.map((work) => (
-              <AuthorWorkCard key={work.key} work={work} author={mainAuthor(author)} />
+              <AuthorWorkCard key={work.key} work={work} author={mainAuthor(author)} onOwned={() => markOwned(work.key)} />
             ))}
           </div>
         )}

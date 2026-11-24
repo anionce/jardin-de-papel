@@ -42,6 +42,8 @@ export const mainAuthor = (name: string) => name.split(/,| y | & | and /i)[0].tr
 
 export const booksByAuthor = (books: Book[], name: string) => books.filter((book) => isByAuthor(book, name))
 
+export const hideWork = (hiddenWorks: string[] | undefined, key: string) => [...new Set([...(hiddenWorks ?? []), key])]
+
 export const bookshopSearchUrl = (title: string, author: string) =>
   `${BOOKSHOP_SEARCH}${encodeURIComponent(`${title} ${author}`)}`
 
@@ -51,10 +53,12 @@ export const otherWorks = (
   docs: OpenLibraryWorkDoc[],
   owned: Book[],
   author: string,
-  ownedOriginalTitles: string[] = []
+  ownedWorkKeys: string[] = [],
+  hiddenWorks: string[] = []
 ): AuthorWork[] => {
-  const ownedWorks = new Set(owned.map((b) => b.workKey).filter(Boolean))
-  const seenTitles = new Set([...owned.map((b) => b.title ?? ""), ...ownedOriginalTitles].map(workTitleKey))
+  const ownedWorks = new Set([...owned.map((b) => b.workKey), ...ownedWorkKeys, ...hiddenWorks].filter(Boolean))
+  const ownedDocTitles = docs.filter((d) => ownedWorks.has(d.key)).map((d) => d.title ?? "")
+  const seenTitles = new Set([...owned.map((b) => b.title ?? ""), ...ownedDocTitles].map(workTitleKey))
   const works: AuthorWork[] = []
   for (const doc of docs) {
     if (!doc.title || ownedWorks.has(doc.key)) continue
@@ -89,15 +93,36 @@ const findAuthorKey = async (name: string, signal: AbortSignal) => {
   return best?.key
 }
 
-export const fetchWorkTitles = async (workKeys: string[], signal: AbortSignal): Promise<string[]> => {
-  const titles = await Promise.all(
-    workKeys.map((key) =>
-      getJson<{ title?: string }>(`${OPEN_LIBRARY}${key}.json`, signal)
-        .then((work) => work.title)
-        .catch(() => undefined)
-    )
+interface OpenLibraryMatchDoc {
+  key: string
+  title?: string
+  editions?: { docs?: { title?: string }[] }
+}
+
+const OWNED_MATCH_LIMIT = "5"
+
+export const fetchOwnedWorkKeys = async (owned: Book[], author: string, signal: AbortSignal): Promise<string[]> => {
+  const keys = await Promise.all(
+    owned.map(async (book) => {
+      if (!book.title) return []
+      const wanted = workTitleKey(book.title)
+      const params = new URLSearchParams({
+        q: book.title.replace(/\s*\([^)]*\)/g, ""),
+        author,
+        sort: "editions",
+        limit: OWNED_MATCH_LIMIT,
+        lang: "en",
+        fields: "key,title,editions,editions.title",
+      })
+      const { docs = [] } = await getJson<{ docs?: OpenLibraryMatchDoc[] }>(`${OPEN_LIBRARY}/search.json?${params}`, signal).catch(
+        () => ({ docs: [] })
+      )
+      return docs
+        .filter((d) => workTitleKey(d.title ?? "") === wanted || d.editions?.docs?.some((e) => workTitleKey(e.title ?? "") === wanted))
+        .map((d) => d.key)
+    })
   )
-  return titles.filter((title): title is string => Boolean(title))
+  return keys.flat()
 }
 
 export const fetchAuthorWorkDocs = async (name: string, signal: AbortSignal): Promise<OpenLibraryWorkDoc[]> => {

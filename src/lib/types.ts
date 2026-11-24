@@ -27,6 +27,7 @@ export type BookDraft = Omit<Book, "id" | "createdAt" | "addedBy">
 export interface LibrarySettings {
   people: string[]
   defaultPerson: string
+  hiddenWorks?: string[]
 }
 
 export type ReadFilter = "all" | "read" | "unread"
