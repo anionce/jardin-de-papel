@@ -9,7 +9,9 @@ interface FiltersState {
   genres: string[]
   sort: SortKey
   person: string | null
+  shelf: string | null
   setPerson: (person: string | null) => void
+  setShelf: (shelf: string | null) => void
   setText: (text: string) => void
   setRead: (read: ReadFilter) => void
   setGenres: (genres: string[]) => void
@@ -26,14 +28,16 @@ export const useFiltersStore = create<FiltersState>()(
       genres: [],
       sort: DEFAULT_SORT,
       person: null,
+      shelf: null,
       setPerson: (person) => set({ person }),
+      setShelf: (shelf) => set({ shelf }),
       setText: (text) => set({ text }),
       setRead: (read) => set({ read }),
       setGenres: (genres) => set({ genres }),
       toggleGenre: (genre) =>
         set((s) => ({ genres: s.genres.includes(genre) ? s.genres.filter((g) => g !== genre) : [...s.genres, genre] })),
       setSort: (sort) => set({ sort }),
-      reset: () => set({ text: "", read: "all", genres: [], person: null }),
+      reset: () => set({ text: "", read: "all", genres: [], person: null, shelf: null }),
     }),
     {
       name: "biblioteca-filters",
@@ -47,7 +51,7 @@ export const useFiltersStore = create<FiltersState>()(
           genres: rest.genres ?? (genre ? [genre] : []),
         } as FiltersState
       },
-      partialize: ({ read, genres, sort, person }) => ({ read, genres, sort, person }),
+      partialize: ({ read, genres, sort, person, shelf }) => ({ read, genres, sort, person, shelf }),
     }
   )
 )

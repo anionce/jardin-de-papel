@@ -1,6 +1,8 @@
 const COVER_MAX_SIDE = 500
 const COVER_QUALITY = 0.82
 const SHELF_PHOTO_QUALITY = 0.85
+const LOCATION_PHOTO_MAX_SIDE = 640
+const LOCATION_PHOTO_QUALITY = 0.72
 const DATA_URL_PREFIX = "data:image/jpeg;base64,"
 
 export const scaledSize = (width: number, height: number, maxSide: number) => {
@@ -20,6 +22,9 @@ const resizeToJpegDataUrl = async (file: File, maxSide: number, quality: number)
 }
 
 export const imageFileToDataUrl = (file: File): Promise<string> => resizeToJpegDataUrl(file, COVER_MAX_SIDE, COVER_QUALITY)
+
+export const locationPhotoToDataUrl = (file: File): Promise<string> =>
+  resizeToJpegDataUrl(file, LOCATION_PHOTO_MAX_SIDE, LOCATION_PHOTO_QUALITY)
 
 export const shelfPhotoToBase64 = async (file: File, maxSide: number) => {
   const dataUrl = await resizeToJpegDataUrl(file, maxSide, SHELF_PHOTO_QUALITY)

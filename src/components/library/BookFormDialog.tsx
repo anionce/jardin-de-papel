@@ -3,6 +3,7 @@ import { Trash2 } from "lucide-react"
 import { CoverField } from "@/components/library/CoverField"
 import { BookSuggestions } from "@/components/library/BookSuggestions"
 import { GenresInput } from "@/components/library/GenresInput"
+import { LocationField } from "@/components/library/LocationField"
 import { ReadToggle } from "@/components/library/ReadToggle"
 import { SimilarBooksWarning } from "@/components/library/SimilarBooksWarning"
 import { PersonPicker } from "@/components/library/PersonPicker"
@@ -16,6 +17,7 @@ import { applySuggestion, identityChanged, toDraft, toValues, type FormValues } 
 import { addBook, removeBook, updateBook } from "@/lib/db"
 import { similarBooksFinder } from "@/lib/duplicates"
 import { hasSeveralPeople, withMemberDefault } from "@/lib/people"
+import { shelvesOf } from "@/lib/shelves"
 import { uniqueGenres, uniquePublishers } from "@/lib/search"
 import { cn } from "@/lib/utils"
 import type { Book, BookDraft } from "@/lib/types"
@@ -23,7 +25,7 @@ import { useBookFormStore } from "@/store/useBookFormStore"
 import { useLibraryStore } from "@/store/useLibraryStore"
 import { useSettingsStore } from "@/store/useSettingsStore"
 
-type TextField = Exclude<keyof FormValues, "read" | "coverUrl" | "coverRemoved" | "genres" | "person">
+type TextField = Exclude<keyof FormValues, "read" | "coverUrl" | "coverRemoved" | "genres" | "person" | "shelf" | "location">
 
 const FIELDS: { name: TextField; label: string; placeholder: string; inputMode?: "numeric" }[] = [
   { name: "title", label: "Título", placeholder: "Cien años de soledad" },
@@ -165,6 +167,14 @@ const BookForm = ({ editing, onDone }: { editing: Book | null; onDone: () => voi
           <option key={p} value={p} />
         ))}
       </datalist>
+
+      <LocationField
+        shelves={shelvesOf(settings)}
+        shelf={values.shelf}
+        location={values.location}
+        onShelfChange={(shelf) => set("shelf", shelf)}
+        onLocationChange={(location) => set("location", location)}
+      />
 
       {hasSeveralPeople(settings) && (
         <div className="sm:col-span-2">

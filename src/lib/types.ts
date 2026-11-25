@@ -19,15 +19,23 @@ export interface Book {
   addedBy?: string
   owner?: string
   person?: string
+  shelf?: string
+  location?: string
   createdAt: number
 }
 
 export type BookDraft = Omit<Book, "id" | "createdAt" | "addedBy">
 
+export interface Shelf {
+  name: string
+  photo?: string
+}
+
 export interface LibrarySettings {
   people: string[]
   defaultPerson: string
   hiddenWorks?: string[]
+  shelves?: Shelf[]
 }
 
 export type ReadFilter = "all" | "read" | "unread"

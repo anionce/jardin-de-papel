@@ -60,7 +60,21 @@ export const publisherPatches = (candidates: PhotoCandidate[]): { id: string; pa
   })
 }
 
-export const candidatesToDrafts = (candidates: PhotoCandidate[]): BookDraft[] => {
+type BookPatch = { id: string; patch: Partial<BookDraft> }
+
+export const shelfPatches = (candidates: PhotoCandidate[], shelf: string | undefined): BookPatch[] => {
+  if (!shelf) return []
+  const ids = new Set(candidates.flatMap((c) => (c.existing && c.existing.shelf !== shelf ? [c.existing.id] : [])))
+  return [...ids].map((id) => ({ id, patch: { shelf } }))
+}
+
+export const mergePatches = (...lists: BookPatch[][]): BookPatch[] => {
+  const byId = new Map<string, Partial<BookDraft>>()
+  for (const { id, patch } of lists.flat()) byId.set(id, { ...byId.get(id), ...patch })
+  return [...byId].map(([id, patch]) => ({ id, patch }))
+}
+
+export const candidatesToDrafts = (candidates: PhotoCandidate[], shelf?: string): BookDraft[] => {
   return candidates
     .filter((c) => c.include && (c.title.trim() || c.author.trim()))
     .map((c) => ({
@@ -68,5 +82,6 @@ export const candidatesToDrafts = (candidates: PhotoCandidate[]): BookDraft[] =>
       author: c.author.trim() || undefined,
       publisher: c.publisher.trim() || undefined,
       read: false,
+      ...(shelf ? { shelf } : {}),
     }))
 }

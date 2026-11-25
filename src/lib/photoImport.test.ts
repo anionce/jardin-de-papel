@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildCandidates, candidatesToDrafts, publisherPatches } from "@/lib/photoImport"
+import { buildCandidates, candidatesToDrafts, mergePatches, publisherPatches, shelfPatches } from "@/lib/photoImport"
 import type { SpineReading } from "@/lib/shelfReading"
 import { makeBook } from "@/test/factories"
 
@@ -86,5 +86,30 @@ describe("publisherPatches", () => {
       [owned]
     )
     expect(publisherPatches(candidates)).toEqual([])
+  })
+})
+
+describe("placing books from a photo on a shelf", () => {
+  const owned = makeBook({ title: "Nada", author: "Carmen Laforet" })
+  const placed = makeBook({ title: "1984", author: "George Orwell", shelf: "Salón" })
+  const candidates = buildCandidates(
+    [[spine({ title: "Nada", author: "Carmen Laforet" }), spine({ title: "1984", author: "George Orwell" }), spine({ title: "Patria", author: "Fernando Aramburu" })]],
+    [owned, placed]
+  )
+
+  it("puts new books on the chosen shelf", () => {
+    expect(candidatesToDrafts(candidates, "Salón")).toEqual([{ title: "Patria", author: "Fernando Aramburu", publisher: undefined, read: false, shelf: "Salón" }])
+  })
+
+  it("moves the owned books seen in the photo to that shelf, unless they are already there", () => {
+    expect(shelfPatches(candidates, "Salón")).toEqual([{ id: owned.id, patch: { shelf: "Salón" } }])
+    expect(shelfPatches(candidates, undefined)).toEqual([])
+  })
+
+  it("merges several changes to the same book", () => {
+    expect(mergePatches([{ id: "a", patch: { publisher: "Austral" } }], [{ id: "a", patch: { shelf: "Salón" } }, { id: "b", patch: { shelf: "Salón" } }])).toEqual([
+      { id: "a", patch: { publisher: "Austral", shelf: "Salón" } },
+      { id: "b", patch: { shelf: "Salón" } },
+    ])
   })
 })

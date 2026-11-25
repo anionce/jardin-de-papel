@@ -12,10 +12,11 @@ export const useFilteredBooks = () => {
   const genres = useFiltersStore((s) => s.genres)
   const sort = useFiltersStore((s) => s.sort)
   const person = useFiltersStore((s) => s.person)
+  const shelf = useFiltersStore((s) => s.shelf)
   const settings = useSettingsStore((s) => s.settings)
 
   return useMemo(
-    () => filterBooks(books, { text, read, genres, sort, person, settings }),
-    [books, text, read, genres, sort, person, settings]
+    () => filterBooks(books, { text, read, genres, sort, person, shelf, settings }),
+    [books, text, read, genres, sort, person, shelf, settings]
   )
 }

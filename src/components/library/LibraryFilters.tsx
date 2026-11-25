@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Check, ChevronDown, X } from "lucide-react"
 import { hasSeveralPeople } from "@/lib/people"
+import { NO_SHELF, shelvesOf } from "@/lib/shelves"
 import { normalize } from "@/lib/text"
 import { SelectField } from "@/components/ui/select-field"
 import { cn } from "@/lib/utils"
@@ -31,9 +32,11 @@ const selectClass =
   "h-9 cursor-pointer rounded-full border border-border bg-background px-3.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/20"
 
 export const LibraryFilters = ({ genres }: { genres: string[] }) => {
-  const { read, sort, person, setRead, setSort, setPerson } = useFiltersStore()
+  const { read, sort, person, shelf, setRead, setSort, setPerson, setShelf } = useFiltersStore()
   const settings = useSettingsStore((s) => s.settings)
   const chosenPerson = person && settings.people.includes(person) ? person : ""
+  const shelves = shelvesOf(settings)
+  const chosenShelf = shelf && (shelf === NO_SHELF || shelves.some((s) => s.name === shelf)) ? shelf : ""
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-2">
@@ -67,6 +70,18 @@ export const LibraryFilters = ({ genres }: { genres: string[] }) => {
               De {p}
             </option>
           ))}
+        </SelectField>
+      )}
+
+      {shelves.length > 0 && (
+        <SelectField value={chosenShelf} onChange={(e) => setShelf(e.target.value || null)} aria-label="Estantería">
+          <option value="">Todas las estanterías</option>
+          {shelves.map((s) => (
+            <option key={s.name} value={s.name}>
+              {s.name}
+            </option>
+          ))}
+          <option value={NO_SHELF}>Sin estantería</option>
         </SelectField>
       )}
 

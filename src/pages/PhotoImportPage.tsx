@@ -7,10 +7,13 @@ import { SpineReviewList } from "@/components/photos/SpineReviewList"
 import { Button } from "@/components/ui/button"
 import { useShelfPhotoReading } from "@/hooks/useShelfPhotoReading"
 import { addBooks, updateEachBook } from "@/lib/db"
-import { candidatesToDrafts, publisherPatches } from "@/lib/photoImport"
+import { candidatesToDrafts, mergePatches, publisherPatches, shelfPatches } from "@/lib/photoImport"
 import { DEFAULT_SORT } from "@/lib/search"
+import { shelvesOf } from "@/lib/shelves"
+import { SelectField } from "@/components/ui/select-field"
 import { useFiltersStore } from "@/store/useFiltersStore"
 import { useLibraryStore } from "@/store/useLibraryStore"
+import { useSettingsStore } from "@/store/useSettingsStore"
 
 const TIPS = [
   "Haz fotos de los lomos de frente y con buena luz.",
@@ -29,12 +32,20 @@ export const PhotoImportPage = () => {
   const [photos, setPhotos] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const shelves = shelvesOf(useSettingsStore((s) => s.settings))
+  const [shelf, setShelf] = useState("")
+  const chosenShelf = shelves.some((s) => s.name === shelf) ? shelf : undefined
   const { progress, errors, candidates, readPhotos, updateCandidate, reset } = useShelfPhotoReading()
 
   const reading = progress !== null
-  const drafts = candidates ? candidatesToDrafts(candidates) : []
+  const drafts = candidates ? candidatesToDrafts(candidates, chosenShelf) : []
   const editionFixes = candidates ? publisherPatches(candidates) : []
-  const saveLabel = [drafts.length > 0 && `Añadir ${bookCount(drafts.length)}`, editionFixes.length > 0 && `completar ${editionFixes.length} ${editionFixes.length === 1 ? "edición" : "ediciones"}`]
+  const placed = candidates ? shelfPatches(candidates, chosenShelf) : []
+  const saveLabel = [
+    drafts.length > 0 && `Añadir ${bookCount(drafts.length)}`,
+    editionFixes.length > 0 && `completar ${editionFixes.length} ${editionFixes.length === 1 ? "edición" : "ediciones"}`,
+    placed.length > 0 && `ubicar ${placed.length} que ya tienes`,
+  ]
     .filter(Boolean)
     .join(" y ")
 
@@ -42,7 +53,7 @@ export const PhotoImportPage = () => {
     setSaving(true)
     setSaveError(null)
     try {
-      await updateEachBook(editionFixes)
+      await updateEachBook(mergePatches(editionFixes, placed))
       await addBooks(drafts)
       resetFilters()
       setSort(DEFAULT_SORT)
@@ -114,6 +125,19 @@ export const PhotoImportPage = () => {
               </p>
             )}
             <SpineReviewList candidates={candidates} onChange={updateCandidate} />
+            {shelves.length > 0 && (
+              <label className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                ¿En qué estantería están?
+                <SelectField value={chosenShelf ?? ""} onChange={(e) => setShelf(e.target.value)}>
+                  <option value="">No lo indico</option>
+                  {shelves.map((s) => (
+                    <option key={s.name} value={s.name}>
+                      {s.name}
+                    </option>
+                  ))}
+                </SelectField>
+              </label>
+            )}
             {saveError && <p className="text-sm text-destructive">{saveError}</p>}
             <Button
               onClick={handleSave}

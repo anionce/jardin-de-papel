@@ -1,5 +1,6 @@
 import { bookGenres } from "@/lib/genres"
 import { bookPerson } from "@/lib/people"
+import { matchesShelf } from "@/lib/shelves"
 import { normalize } from "@/lib/text"
 import type { Book, LibrarySettings, ReadFilter, SortField, SortKey } from "@/lib/types"
 
@@ -9,12 +10,13 @@ export interface LibraryQuery {
   genres: string[]
   sort: SortKey
   person?: string | null
+  shelf?: string | null
   settings?: LibrarySettings
 }
 
 const haystack = (book: Book): string => {
   return normalize(
-    [book.title, book.author, book.publisher, ...bookGenres(book), book.year, book.isbn].filter(Boolean).join(" ")
+    [book.title, book.author, book.publisher, ...bookGenres(book), book.year, book.isbn, book.shelf, book.location].filter(Boolean).join(" ")
   )
 }
 
@@ -61,6 +63,7 @@ export const filterBooks = (books: Book[], query: LibraryQuery): Book[] => {
       if (query.read === "unread" && book.read) return false
       if (query.genres.length > 0 && !bookGenres(book).some((g) => query.genres.includes(g))) return false
       if (query.person && query.settings && bookPerson(book, query.settings) !== query.person) return false
+      if (query.settings && !matchesShelf(book, query.shelf, query.settings)) return false
       return matchesText(book, query.text)
     })
     .sort(sorter(query.sort))

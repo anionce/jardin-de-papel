@@ -16,6 +16,8 @@ export interface FormValues {
   coverRemoved: boolean
   read: boolean
   person: string
+  shelf: string
+  location: string
 }
 
 export const toValues = (book: Book | null, settings?: LibrarySettings): FormValues => {
@@ -31,6 +33,8 @@ export const toValues = (book: Book | null, settings?: LibrarySettings): FormVal
     coverRemoved: Boolean(book?.coverChecked && !book.coverUrl),
     read: book?.read ?? false,
     person: settings ? bookPerson(book ?? {}, settings) : (book?.person ?? ""),
+    shelf: book?.shelf ?? "",
+    location: book?.location ?? "",
   }
 }
 
@@ -50,6 +54,8 @@ export const toDraft = (values: FormValues): BookDraft => {
     coverChecked: values.coverUrl.trim() || values.coverRemoved ? true : undefined,
     read: values.read,
     person: text(values.person),
+    shelf: text(values.shelf),
+    location: text(values.location),
   }
 }
 

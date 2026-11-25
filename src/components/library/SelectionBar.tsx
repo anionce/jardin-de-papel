@@ -1,16 +1,19 @@
 import { useMemo, useState } from "react"
-import { BookCheck, BookMarked, Tag, Trash2, Users, X } from "lucide-react"
+import { BookCheck, BookMarked, MapPin, Tag, Trash2, Users, X } from "lucide-react"
 import { PersonPicker } from "@/components/library/PersonPicker"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { removeBooks, updateBooks, updateEachBook } from "@/lib/db"
 import { addGenre, hasGenre, removeGenre } from "@/lib/genres"
 import { hasSeveralPeople } from "@/lib/people"
+import { shelvesOf } from "@/lib/shelves"
 import { uniqueGenres } from "@/lib/search"
 import type { Book } from "@/lib/types"
 import { useLibraryStore } from "@/store/useLibraryStore"
 import { useSelectionStore } from "@/store/useSelectionStore"
 import { useSettingsStore } from "@/store/useSettingsStore"
+
+const NO_SHELF_LABEL = "Ninguna"
 
 export const SelectionBar = ({ visibleBooks }: { visibleBooks: Book[] }) => {
   const { ids, stop, setMany, clear } = useSelectionStore()
@@ -20,8 +23,10 @@ export const SelectionBar = ({ visibleBooks }: { visibleBooks: Book[] }) => {
   const [genreOpen, setGenreOpen] = useState(false)
   const [genre, setGenre] = useState("")
   const [personOpen, setPersonOpen] = useState(false)
+  const [shelfOpen, setShelfOpen] = useState(false)
   const settings = useSettingsStore((s) => s.settings)
   const [busy, setBusy] = useState(false)
+  const shelfNames = shelvesOf(settings).map((s) => s.name)
 
   const selected = [...ids]
   const count = selected.length
@@ -114,6 +119,15 @@ export const SelectionBar = ({ visibleBooks }: { visibleBooks: Book[] }) => {
               <Users /> De quién
             </Button>
           )}
+          {shelfNames.length > 0 && (
+            <Button
+              disabled={count === 0 || busy}
+              onClick={() => setShelfOpen((o) => !o)}
+              className="h-9 rounded-full bg-paper/15 px-3.5 text-on-color hover:bg-paper/25"
+            >
+              <MapPin /> Estantería
+            </Button>
+          )}
           <Button
             disabled={count === 0 || busy}
             onClick={handleDelete}
@@ -132,6 +146,19 @@ export const SelectionBar = ({ visibleBooks }: { visibleBooks: Book[] }) => {
             onPick={(person) => {
               void run(() => updateBooks(selected, { person }))
               setPersonOpen(false)
+            }}
+          />
+        )}
+
+        {shelfOpen && shelfNames.length > 0 && (
+          <PersonPicker
+            label="Están en"
+            people={[...shelfNames, NO_SHELF_LABEL]}
+            disabled={busy || count === 0}
+            onDark
+            onPick={(name) => {
+              void run(() => updateBooks(selected, { shelf: name === NO_SHELF_LABEL ? undefined : name }))
+              setShelfOpen(false)
             }}
           />
         )}

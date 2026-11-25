@@ -1,9 +1,10 @@
 import { memo } from "react"
 import { Link } from "react-router-dom"
-import { BookMarked, Check } from "lucide-react"
+import { BookMarked, Check, MapPin } from "lucide-react"
 import { BookCover } from "@/components/library/BookCover"
 import { updateBook } from "@/lib/db"
 import { bookPerson, hasSeveralPeople } from "@/lib/people"
+import { bookShelf } from "@/lib/shelves"
 import { hashString } from "@/lib/text"
 import { cn } from "@/lib/utils"
 import type { Book } from "@/lib/types"
@@ -20,6 +21,7 @@ export const BookCard = memo(({ book }: { book: Book }) => {
   const toggle = useSelectionStore((s) => s.toggle)
   const settings = useSettingsStore((s) => s.settings)
   const owner = hasSeveralPeople(settings) ? bookPerson(book, settings) : undefined
+  const place = [bookShelf(book, settings), book.location].filter(Boolean).join(" · ")
   const meta = [book.year, book.publisher, book.pages && `${book.pages} págs.`].filter(Boolean).join(" · ")
 
   return (
@@ -62,6 +64,11 @@ export const BookCard = memo(({ book }: { book: Book }) => {
       )}
       {meta && <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{meta}</p>}
       {owner && <p className="mt-0.5 text-[11px] font-semibold text-sage-deep">De {owner}</p>}
+      {place && (
+        <p className="mt-0.5 inline-flex max-w-full items-center gap-0.5 text-[11px] text-muted-foreground">
+          <MapPin className="size-3 shrink-0" /> <span className="line-clamp-1">{place}</span>
+        </p>
+      )}
 
       <button
         type="button"

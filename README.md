@@ -59,6 +59,10 @@ To let another account use an existing library, add two optional fields to its `
 
 A library can be shared by several people (*Personas* page). Each library keeps its own list in `libraries/{email}` with a default person: new books and books without a `person` belong to them. Books can be filtered by person, assigned in the book form or in bulk from the selection bar, and renaming or removing a person updates their books.
 
+
+## Shelves
+
+Each book can have a location: a shelf from the *Estanterías* page plus an optional free-text note ("top row, at the back"). Shelves are stored in the library settings with an optional photo, resized to 640 px so a dozen or more fit in the settings document. Books can be filtered by shelf, assigned one in the book form or in bulk from the selection bar, and *Desde fotos* can place both the new books and the owned books it recognises on the chosen shelf. Renaming or removing a shelf updates its books.
 ## Adding books from photos
 
 The *Desde fotos* page takes one or more photos of shelves, reads every spine (title, author and publisher) and shows an editable list before saving. Books already on the shelf are marked and left out by default, and a book seen in two overlapping photos is listed once.

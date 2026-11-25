@@ -91,3 +91,14 @@ describe("filterBooks by person", () => {
     expect(filterBooks(books, query({ person: null, settings }))).toHaveLength(3)
   })
 })
+
+describe("filterBooks by place", () => {
+  const settings = { people: ["Alex"], defaultPerson: "Alex", shelves: [{ name: "Salón" }] }
+  const onShelf = makeBook({ title: "Nada", shelf: "Salón" })
+  const withNote = makeBook({ title: "Patria", location: "caja del trastero" })
+
+  it("filters by shelf and finds books by their location note", () => {
+    expect(filterBooks([onShelf, withNote], query({ shelf: "Salón", settings }))).toEqual([onShelf])
+    expect(filterBooks([onShelf, withNote], query({ text: "trastero", settings }))).toEqual([withNote])
+  })
+})

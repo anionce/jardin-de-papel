@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { to: "/generos", label: "Géneros", end: false },
   { to: "/sagas", label: "Sagas", end: false },
   { to: "/personas", label: "Personas", end: false },
+  { to: "/estanterias", label: "Estanterías", end: false },
   { to: "/fotos", label: "Desde fotos", end: false },
   { to: "/importar", label: "Importar", end: false },
 ]

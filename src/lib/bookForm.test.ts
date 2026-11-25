@@ -84,3 +84,14 @@ describe("person in the form", () => {
     expect(toDraft({ ...toValues(null, settings), person: "Alex" }).person).toBe("Alex")
   })
 })
+
+describe("location in the form", () => {
+  it("keeps the shelf and the location note, and drops them when empty", () => {
+    const values = toValues(makeBook({ shelf: "Salón", location: "balda de arriba" }))
+    expect(values).toMatchObject({ shelf: "Salón", location: "balda de arriba" })
+    expect(toDraft({ ...values, location: " detrás " })).toMatchObject({ shelf: "Salón", location: "detrás" })
+    const cleared = toDraft({ ...values, shelf: "", location: " " })
+    expect(cleared.shelf).toBeUndefined()
+    expect(cleared.location).toBeUndefined()
+  })
+})
