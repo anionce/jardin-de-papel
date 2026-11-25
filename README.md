@@ -62,14 +62,15 @@ A library can be shared by several people (*Personas* page). Each library keeps 
 
 ## Shelves
 
-Each book can have a location: a shelf from the *Estanterías* page plus an optional free-text note ("top row, at the back"). Shelves are stored in the library settings with an optional photo, resized to 640 px so a dozen or more fit in the settings document. Books can be filtered by shelf, assigned one in the book form or in bulk from the selection bar, and *Desde fotos* can place both the new books and the owned books it recognises on the chosen shelf. Renaming or removing a shelf updates its books.
+Each book can have a location: a shelf from the *Estanterías* page plus an optional free-text note ("top row, at the back"). Shelves are stored in the library settings with an optional photo, resized to 640 px so a dozen or more fit in the settings document. Books can be filtered by shelf, assigned one in the book form or in bulk from the selection bar Renaming or removing a shelf updates its books.
+
 ## Adding books from photos
 
-The *Desde fotos* page takes one or more photos of shelves, reads every spine (title, author and publisher) and shows an editable list before saving. Books already on the shelf are marked and left out by default, and a book seen in two overlapping photos is listed once.
+The *Desde fotos* page only invites people to get in touch: reading shelf photos is done by hand outside the app, so the shared Gemini free tier is not spent by every visitor.
 
-Each photo is resized in the browser and sent to the `read-shelf` Netlify Edge Function (`netlify/edge-functions/read-shelf.ts`), which asks Google Gemini (`gemini-4-hydrogen` through the Interactions API, JSON output, `store: false`) to read the spines. The function only answers to signed-in accounts that Firestore lets read their own library, so the key cannot be used by anyone else.
+## Author pages
 
-Create a free key in [Google AI Studio](https://aistudio.google.com) and set it as `GEMINI_API_KEY` in the Netlify site's environment variables (never in the repo). On the free tier Google may use the photos to improve its products and the number of reads per day is limited. Without the key the page reports that photo reading is not configured.
+Clicking an author shows the books you own by them and their other works from Open Library, in their Spanish edition when there is one. To hide works you already own in another language, the `match-works` Netlify Edge Function asks Google Gemini (free tier, `store: false`) to compare titles; it only answers to accounts on the access list. Create a free key in [Google AI Studio](https://aistudio.google.com) and set it as `GEMINI_API_KEY` in the Netlify environment variables (never in the repo). Without it the page still works and lists every work.
 
 ## Goodreads import
 
