@@ -60,7 +60,7 @@ describe("GenresPage", () => {
     const { user } = renderWithShelf(<GenresPage />, seedShelf([tagged, first, second]))
 
     expect(screen.getByText(/no tienen género/)).toHaveTextContent("2 libros no tienen género")
-    await user.click(screen.getByRole("button", { name: /Ponerles género/ }))
+    await user.click(screen.getByRole("button", { name: /Añade género/ }))
     expect(screen.getByRole("heading", { name: "Dos" })).toBeInTheDocument()
 
     await user.click(screen.getByRole("button", { name: "Misterio" }))

@@ -29,7 +29,7 @@ export const GenreTagger = () => {
           <span className="font-semibold">{untagged}</span> {untagged === 1 ? "libro no tiene" : "libros no tienen"} género.
         </p>
         <Button onClick={() => setOpen(true)} className="h-10 rounded-full px-5">
-          <Tags /> Ponerles género
+          <Tags /> Añade género
         </Button>
       </div>
     )
