@@ -1,8 +1,7 @@
 import { useMemo } from "react"
 import { Link } from "react-router-dom"
-import type { LucideIcon } from "lucide-react"
-import { Camera, Copy, Layers, Library, MapPin, Tags, Upload, Users } from "lucide-react"
 import { BookStack } from "@/components/decor/BookStack"
+import { SECTIONS, type Section } from "@/components/layout/sections"
 import { Flower } from "@/components/decor/Flower"
 import { StatsBand } from "@/components/library/StatsBand"
 import { useDuplicateGroups } from "@/hooks/useDuplicateGroups"
@@ -13,11 +12,8 @@ import { cn } from "@/lib/utils"
 import { useLibraryStore } from "@/store/useLibraryStore"
 import { useSettingsStore } from "@/store/useSettingsStore"
 
-interface PanelCard {
-  to: string
-  title: string
+interface PanelCard extends Section {
   detail: string
-  icon: LucideIcon
   tone: string
 }
 
@@ -35,34 +31,28 @@ export const DashboardPage = () => {
   const shelves = shelvesOf(settings).length
 
   const cards: PanelCard[] = [
-    { to: "/biblioteca", title: "Biblioteca", detail: plural(books.length, "libro", "libros"), icon: Library, tone: "bg-blush/70" },
+    { ...SECTIONS.library, detail: plural(books.length, "libro", "libros"), tone: "bg-blush/70" },
     {
-      to: "/generos",
-      title: "Géneros",
+      ...SECTIONS.genres,
       detail: withoutGenre > 0 ? plural(withoutGenre, "libro sin género", "libros sin género") : "Todos tienen género",
-      icon: Tags,
       tone: "bg-mustard/45",
     },
     {
-      to: "/sagas",
-      title: "Sagas",
+      ...SECTIONS.sagas,
       detail: incompleteSagas > 0 ? plural(incompleteSagas, "saga sin completar", "sagas sin completar") : "Todas completas",
-      icon: Layers,
       tone: "bg-sage/70",
     },
-    { to: "/personas", title: "Personas", detail: peopleList(settings.people), icon: Users, tone: "bg-coral/60" },
+    { ...SECTIONS.people, detail: peopleList(settings.people), tone: "bg-coral/60" },
     {
-      to: "/estanterias",
-      title: "Estanterías",
+      ...SECTIONS.shelves,
       detail: shelves > 0 ? plural(shelves, "estantería", "estanterías") : "Aún no hay ninguna",
-      icon: MapPin,
       tone: "bg-mustard/80",
     },
     ...(duplicates > 0
-      ? [{ to: "/duplicados", title: "Duplicados", detail: plural(duplicates, "posible repetido", "posibles repetidos"), icon: Copy, tone: "bg-burgundy/15" }]
+      ? [{ ...SECTIONS.duplicates, detail: plural(duplicates, "posible repetido", "posibles repetidos"), tone: "bg-burgundy/15" }]
       : []),
-    { to: "/importar", title: "Importar", detail: "Desde Goodreads", icon: Upload, tone: "bg-sage-deep/40" },
-    { to: "/fotos", title: "Desde fotos", detail: "Tu librería en fotos", icon: Camera, tone: "bg-burgundy/30" },
+    { ...SECTIONS.import, detail: "Desde Goodreads", tone: "bg-sage-deep/40" },
+    { ...SECTIONS.photos, detail: "Tu librería en fotos", tone: "bg-burgundy/30" },
   ]
 
   return (

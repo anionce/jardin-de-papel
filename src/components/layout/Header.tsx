@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LibrarySwitcher } from "@/components/layout/LibrarySwitcher"
+import { SectionsMenu } from "@/components/layout/SectionsMenu"
 import { SignOutButton } from "@/components/layout/SignOutButton"
 import { cn } from "@/lib/utils"
 import { useBookFormStore } from "@/store/useBookFormStore"
@@ -36,6 +37,7 @@ export const Header = ({ onSignOut }: { onSignOut?: () => void }) => {
             {item.label}
           </NavLink>
         ))}
+        <SectionsMenu />
       </nav>
 
       <div className="flex items-center gap-2">
