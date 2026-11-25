@@ -5,34 +5,32 @@ service cloud.firestore {
       return request.auth.token.email;
     }
 
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
     function memberPath() {
       return /databases/$(database)/documents/allowedUsers/$(signedInEmail());
     }
 
-    function isAllowed() {
-      return request.auth != null && exists(memberPath());
-    }
-
-    function libraryId() {
-      return get(memberPath()).data.get('library', signedInEmail());
-    }
-
-    function isOwner(data) {
-      return data.owner == libraryId();
+    function isLibrary(id) {
+      return exists(memberPath())
+        ? id == get(memberPath()).data.get('library', signedInEmail())
+        : id == signedInEmail();
     }
 
     match /allowedUsers/{email} {
-      allow read: if request.auth != null && email == signedInEmail();
+      allow read: if isSignedIn() && email == signedInEmail();
     }
 
     match /books/{bookId} {
-      allow read, delete: if isAllowed() && isOwner(resource.data);
-      allow create: if isAllowed() && isOwner(request.resource.data);
-      allow update: if isAllowed() && isOwner(resource.data) && isOwner(request.resource.data);
+      allow read, delete: if isSignedIn() && isLibrary(resource.data.owner);
+      allow create: if isSignedIn() && isLibrary(request.resource.data.owner);
+      allow update: if isSignedIn() && isLibrary(resource.data.owner) && isLibrary(request.resource.data.owner);
     }
 
     match /libraries/{library} {
-      allow read, write: if isAllowed() && library == libraryId();
+      allow read, write: if isSignedIn() && isLibrary(library);
     }
   }
 }

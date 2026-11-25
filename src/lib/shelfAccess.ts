@@ -29,5 +29,5 @@ export const checkLibraryAccess = async (
   const response = await fetchFn(url, { headers: { Authorization: `Bearer ${token}` } })
   if (response.status === 401) return "unauthenticated"
   if (response.status === 403) return "denied"
-  return response.ok ? "allowed" : "denied"
+  return response.ok || response.status === 404 ? "allowed" : "denied"
 }

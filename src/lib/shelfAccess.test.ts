@@ -36,12 +36,12 @@ describe("checkLibraryAccess", () => {
     )
   })
 
-  it("allows accounts that are on the access list", async () => {
+  it("allows any signed-in account, whether or not it joined another library", async () => {
     expect(await checkLibraryAccess(token, "demo-project", respondWith(200))).toBe("allowed")
+    expect(await checkLibraryAccess(token, "demo-project", respondWith(404))).toBe("allowed")
   })
 
-  it("denies accounts that are not on the list or that the rules reject", async () => {
-    expect(await checkLibraryAccess(token, "demo-project", respondWith(404))).toBe("denied")
+  it("denies accounts the rules reject", async () => {
     expect(await checkLibraryAccess(token, "demo-project", respondWith(403))).toBe("denied")
   })
 

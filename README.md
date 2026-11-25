@@ -45,12 +45,12 @@ Tests always run in local mode and never read `.env`, so they never touch Fireba
 3. **Firestore Database:** create it in production mode.
 4. Copy `.env.example` to `.env` and paste the web config.
 5. Publish `firestore.rules` (paste it in *Firestore → Rules* or run `firebase deploy --only firestore:rules`).
-6. Give access to an account by creating a document in the `allowedUsers` collection whose ID is its Google email (any field, e.g. `access: "granted"`). The list lives only in Firestore, never in the repo.
+6. Anyone can sign in with a verified Google account and gets an empty library of their own. The `allowedUsers` collection is only needed to make an account join another library (see below); it lives only in Firestore, never in the repo.
 7. When deploying to Netlify, add the same `VITE_FIREBASE_*` variables and add the Netlify domain under *Authentication → Settings → Authorized domains*.
 
 Each book has an `owner` (the library's email) and every account only sees its own library.
 
-To let another account use an existing library, add two optional fields to its `allowedUsers` document:
+To let another account use an existing library, create a document in `allowedUsers` whose ID is its Google email, with these fields:
 
 - `library`: the email of the account whose library it joins. It then reads, adds and edits the same books and people.
 - `person`: the person new books from this account belong to by default (it must exist in that library's *Personas*).
@@ -70,7 +70,7 @@ The *Desde fotos* page only invites people to get in touch: reading shelf photos
 
 ## Author pages
 
-Clicking an author shows the books you own by them and their other works from Open Library, in their Spanish edition when there is one. To hide works you already own in another language, the `match-works` Netlify Edge Function asks Google Gemini (free tier, `store: false`) to compare titles; it only answers to accounts on the access list. Create a free key in [Google AI Studio](https://aistudio.google.com) and set it as `GEMINI_API_KEY` in the Netlify environment variables (never in the repo). Without it the page still works and lists every work.
+Clicking an author shows the books you own by them and their other works from Open Library, in their Spanish edition when there is one. To hide works you already own in another language, the `match-works` Netlify Edge Function asks Google Gemini (free tier, `store: false`) to compare titles; it only answers to signed-in accounts. Create a free key in [Google AI Studio](https://aistudio.google.com) and set it as `GEMINI_API_KEY` in the Netlify environment variables (never in the repo). Without it the page still works and lists every work.
 
 ## Goodreads import
 

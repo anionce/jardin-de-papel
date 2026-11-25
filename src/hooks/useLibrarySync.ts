@@ -13,7 +13,7 @@ export const useLibrarySync = (enabled: boolean) => {
       const denied = "code" in error && error.code === "permission-denied"
       setError(
         denied
-          ? "Esta cuenta de Google no tiene acceso a la biblioteca. Pide que la añadan a la lista de cuentas permitidas."
+          ? "Esta cuenta de Google no tiene acceso a esta biblioteca."
           : "No se ha podido cargar la biblioteca. Revisa la conexión."
       )
     })
