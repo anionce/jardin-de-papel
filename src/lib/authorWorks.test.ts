@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   applyWorkMatches,
+  spanishCoverFrom,
   booksByAuthor,
   bookshopSearchUrl,
   hideWork,
@@ -115,7 +116,7 @@ describe("workMatchRequest / applyWorkMatches", () => {
     })
   })
 
-  it("hides works marked as owned and adds the Spanish title to the bookshop link", () => {
+  it("hides works marked as owned and shows the Spanish title first, keeping the original", () => {
     const result = applyWorkMatches(
       works,
       [
@@ -125,10 +126,17 @@ describe("workMatchRequest / applyWorkMatches", () => {
       [],
       "Kate Morton"
     )
-    expect(result.map((w) => w.title)).toEqual(["The Distant Hours", "Homecoming"])
-    expect(result[0].spanishTitle).toBe("Las horas distantes")
+    expect(result.map((w) => w.title)).toEqual(["Las horas distantes", "Homecoming"])
+    expect(result[0].originalTitle).toBe("The Distant Hours")
     expect(result[0].buyUrl).toBe(bookshopSearchUrl("Las horas distantes", "Kate Morton"))
-    expect(result[1].spanishTitle).toBeUndefined()
+    expect(result[1].originalTitle).toBeUndefined()
+  })
+
+  it("uses the Spanish half of a bilingual title without repeating it as original", () => {
+    const bilingual = [work("/works/9", "Las horas distantes / The Distant Hours")]
+    const [result] = applyWorkMatches(bilingual, [{ key: "/works/9", ownedTitle: "", show: true, spanishTitle: "Las horas distantes" }], [], "Kate Morton")
+    expect(result.title).toBe("Las horas distantes")
+    expect(result.originalTitle).toBeUndefined()
   })
 })
 
@@ -150,5 +158,23 @@ describe("applyWorkMatches safety net", () => {
       "Kate Morton"
     )
     expect(result).toEqual([])
+  })
+})
+
+describe("spanishCoverFrom", () => {
+  it("takes the cover of a Spanish edition with the same title", () => {
+    const docs = [
+      { title: "The Distant Hours", language: ["eng"], cover_i: 1 },
+      { title: "Las horas distantes", language: ["spa"], editions: { docs: [{ title: "Las horas distantes", language: ["spa"], cover_i: 22 }] } },
+    ]
+    expect(spanishCoverFrom(docs, "Las horas distantes")).toBe("https://covers.openlibrary.org/b/id/22-M.jpg")
+  })
+
+  it("accepts bilingual titles and ignores other books or languages", () => {
+    expect(spanishCoverFrom([{ title: "Las horas distantes / The Distant Hours", language: ["spa"], cover_i: 5 }], "Las horas distantes")).toBe(
+      "https://covers.openlibrary.org/b/id/5-M.jpg"
+    )
+    expect(spanishCoverFrom([{ title: "Otro libro", language: ["spa"], cover_i: 5 }], "Las horas distantes")).toBeUndefined()
+    expect(spanishCoverFrom([{ title: "Las horas distantes", language: ["eng"], cover_i: 5 }], "Las horas distantes")).toBeUndefined()
   })
 })

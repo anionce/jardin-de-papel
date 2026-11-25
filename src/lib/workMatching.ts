@@ -71,7 +71,7 @@ For every candidate return:
   - ownedTitle is not empty.
   - it was written by a different person with the same name, or it is not a book written by this author (textbooks, study guides, anthologies by others).
   - it is not a single work: a collection, box set, omnibus or sample.
-  - it is the same work as another candidate that you show; show only one candidate per work, preferring an English or Spanish title.
+  - it is the same work as another candidate that you show; show only one candidate per work, preferring a Spanish title, then an English one.
 - spanishTitle: the title of the published Spanish translation when you are sure it exists, or the title itself when it is already in Spanish; otherwise an empty string. Never invent a title.
 
 Return each candidate exactly once.`

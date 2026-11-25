@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import {
   applyWorkMatches,
   fetchAuthorWorkDocs,
+  fetchSpanishCover,
   fetchOwnedWorkKeys,
   mainAuthor,
   workMatchRequest,
@@ -47,7 +48,7 @@ export const useAuthorWorkDocs = (author: string, owned: Book[]) => {
   }
 }
 
-const MATCH_CACHE_PREFIX = "work-matches:v2:"
+const MATCH_CACHE_PREFIX = "work-matches:v3:"
 
 const readCachedMatches = (key: string): WorkMatch[] | null => {
   try {
@@ -97,8 +98,47 @@ export const useWorkMatching = (author: string, owned: Book[], works: AuthorWork
 
   const done = state?.key === requestKey ? state : null
   const matches = cached ?? done?.matches ?? null
+  const matched = useMemo(
+    () => (matches ? applyWorkMatches(works, matches, owned, mainAuthor(author)) : works),
+    [matches, works, owned, author]
+  )
+  const covers = useSpanishCovers(matched, mainAuthor(author))
   return {
     checking: works.length > 0 && !cached && !done,
-    works: matches ? applyWorkMatches(works, matches, owned, mainAuthor(author)) : works,
+    works: useMemo(
+      () => matched.map((w) => (covers.get(w.key) ? { ...w, coverUrl: covers.get(w.key) } : w)),
+      [matched, covers]
+    ),
   }
+}
+
+const spanishCoverCache = new Map<string, string | null>()
+
+const useSpanishCovers = (works: AuthorWork[], author: string) => {
+  const [covers, setCovers] = useState<Map<string, string>>(() => new Map())
+  const wanted = useMemo(() => works.filter((w) => w.originalTitle), [works])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    for (const work of wanted) {
+      const cacheKey = `${author}|${work.title}`
+      const known = spanishCoverCache.get(cacheKey)
+      const apply = (cover: string | null | undefined) => {
+        if (cover) setCovers((current) => (current.get(work.key) === cover ? current : new Map(current).set(work.key, cover)))
+      }
+      if (known !== undefined) {
+        apply(known)
+        continue
+      }
+      fetchSpanishCover(work.title, author, controller.signal)
+        .then((cover) => {
+          spanishCoverCache.set(cacheKey, cover ?? null)
+          apply(cover)
+        })
+        .catch(() => undefined)
+    }
+    return () => controller.abort()
+  }, [wanted, author])
+
+  return covers
 }

@@ -14,7 +14,7 @@ export interface AuthorWork {
   title: string
   year?: number
   coverUrl?: string
-  spanishTitle?: string
+  originalTitle?: string
   buyUrl: string
 }
 
@@ -80,6 +80,18 @@ export const otherWorks = (
   return works
 }
 
+interface SpanishEditionDoc {
+  title?: string
+  language?: string[]
+  cover_i?: number
+  editions?: { docs?: { title?: string; language?: string[]; cover_i?: number }[] }
+}
+
+const SPANISH = "spa"
+
+const sameWorkTitle = (a: string | undefined, b: string) =>
+  (a ?? "").split(" / ").some((part) => workTitleKey(part) === workTitleKey(b))
+
 export const workMatchRequest = (author: string, owned: Book[], works: AuthorWork[]): WorkMatchRequest => ({
   author,
   owned: [...new Set(owned.flatMap((b) => (b.title ? [b.title] : [])))].sort(),
@@ -93,9 +105,31 @@ export const applyWorkMatches = (works: AuthorWork[], matches: WorkMatch[], owne
     const match = byKey.get(work.key)
     if (!match) return [work]
     if (!match.show || match.ownedTitle || ownedTitles.has(titleKey(match.spanishTitle))) return []
-    if (!match.spanishTitle || titleKey(match.spanishTitle) === titleKey(work.title)) return [work]
-    return [{ ...work, spanishTitle: match.spanishTitle, buyUrl: bookshopSearchUrl(match.spanishTitle, author) }]
+    if (!match.spanishTitle) return [work]
+    const spanish = { ...work, title: match.spanishTitle, buyUrl: bookshopSearchUrl(match.spanishTitle, author) }
+    return [sameWorkTitle(work.title, match.spanishTitle) ? spanish : { ...spanish, originalTitle: work.title }]
   })
+}
+
+export const spanishCoverFrom = (docs: SpanishEditionDoc[], title: string): string | undefined => {
+  for (const doc of docs) {
+    const edition = doc.editions?.docs?.find((e) => e.cover_i && e.language?.includes(SPANISH) && sameWorkTitle(e.title, title))
+    const cover = edition?.cover_i ?? (doc.language?.includes(SPANISH) && sameWorkTitle(doc.title, title) ? doc.cover_i : undefined)
+    if (cover) return `https://covers.openlibrary.org/b/id/${cover}-M.jpg`
+  }
+  return undefined
+}
+
+export const fetchSpanishCover = async (title: string, author: string, signal: AbortSignal): Promise<string | undefined> => {
+  const params = new URLSearchParams({
+    title,
+    author,
+    lang: "es",
+    limit: "3",
+    fields: "title,language,cover_i,editions,editions.title,editions.language,editions.cover_i",
+  })
+  const { docs = [] } = await getJson<{ docs?: SpanishEditionDoc[] }>(`${OPEN_LIBRARY}/search.json?${params}`, signal)
+  return spanishCoverFrom(docs, title)
 }
 
 const getJson = async <T,>(url: string, signal: AbortSignal): Promise<T> => {

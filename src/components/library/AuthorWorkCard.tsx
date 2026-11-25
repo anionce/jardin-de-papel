@@ -16,7 +16,7 @@ export const AuthorWorkCard = ({ work, author, onOwned }: AuthorWorkCardProps) =
         className="w-24 sm:w-28"
       />
       <h3 className="mt-3 line-clamp-2 font-serif text-[15px] leading-snug font-bold text-burgundy">{work.title}</h3>
-      {work.spanishTitle && <p className="mt-0.5 line-clamp-2 text-xs text-foreground/80">En español: «{work.spanishTitle}»</p>}
+      {work.originalTitle && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">Original: «{work.originalTitle}»</p>}
       {work.year && <p className="mt-0.5 text-xs text-muted-foreground">{work.year}</p>}
       <a
         href={work.buyUrl}

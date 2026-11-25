@@ -72,7 +72,7 @@ export const AuthorPage = () => {
 
       <section className="mt-14">
         <h2 className="font-serif text-2xl font-bold text-burgundy">Otros libros suyos</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Según Open Library, quitando los que ya tienes aunque sea en otro idioma. Si se cuela alguno, pulsa «Ya lo tengo» y no volverá a salir.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Si se cuela alguno que ya tienes, pulsa «Ya lo tengo» y no volverá a salir.</p>
         {searching && (
           <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" /> {loading ? "Buscando sus libros…" : "Comprobando cuáles tienes ya en otro idioma…"}

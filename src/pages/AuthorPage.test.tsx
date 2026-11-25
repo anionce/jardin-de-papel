@@ -111,9 +111,9 @@ describe("AuthorPage", () => {
     )
     renderAuthor([mine])
 
-    expect(await screen.findByRole("heading", { name: "The Distant Hours" })).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: "Las horas distantes" })).toBeInTheDocument()
     expect(screen.queryByRole("heading", { name: "The First Novel" })).not.toBeInTheDocument()
-    expect(screen.getByText("En español: «Las horas distantes»")).toBeInTheDocument()
+    expect(screen.getByText("Original: «The Distant Hours»")).toBeInTheDocument()
     expect(screen.getByRole("link", { name: /Buscar en librerías/ })).toHaveAttribute(
       "href",
       expect.stringContaining("Las%20horas%20distantes")
