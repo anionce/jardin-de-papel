@@ -48,11 +48,16 @@ Tests always run in local mode and never read `.env`, so they never touch Fireba
 6. Give access to an account by creating a document in the `allowedUsers` collection whose ID is its Google email (any field, e.g. `access: "granted"`). The list lives only in Firestore, never in the repo.
 7. When deploying to Netlify, add the same `VITE_FIREBASE_*` variables and add the Netlify domain under *Authentication → Settings → Authorized domains*.
 
-Each book has an `owner` (the account's email) and every account only sees its own library.
+Each book has an `owner` (the library's email) and every account only sees its own library.
+
+To let another account use an existing library, add two optional fields to its `allowedUsers` document:
+
+- `library`: the email of the account whose library it joins. It then reads, adds and edits the same books and people.
+- `person`: the person new books from this account belong to by default (it must exist in that library's *Personas*).
 
 ## People
 
-A library can be shared by several people (*Personas* page). Each account keeps its own list in `libraries/{email}` with a default person: new books and books without a `person` belong to them. Books can be filtered by person, assigned in the book form or in bulk from the selection bar, and renaming or removing a person updates their books.
+A library can be shared by several people (*Personas* page). Each library keeps its own list in `libraries/{email}` with a default person: new books and books without a `person` belong to them. Books can be filtered by person, assigned in the book form or in bulk from the selection bar, and renaming or removing a person updates their books.
 
 ## Adding books from photos
 

@@ -6,16 +6,19 @@ import { BookFormDialog } from "@/components/library/BookFormDialog"
 import { useAuth } from "@/hooks/useAuth"
 import { useBookLookupBackfill } from "@/hooks/useBookLookupBackfill"
 import { useLibrarySync } from "@/hooks/useLibrarySync"
+import { useMembership } from "@/hooks/useMembership"
 import { useSettingsSync } from "@/hooks/useSettingsSync"
 
 export const AppShell = () => {
   const { user, loading, isLocalMode, signIn, signOut } = useAuth()
   const signedIn = isLocalMode || Boolean(user)
-  useLibrarySync(signedIn)
-  useSettingsSync(signedIn)
-  useBookLookupBackfill(signedIn)
+  const memberLoaded = useMembership(user)
+  const ready = isLocalMode || memberLoaded
+  useLibrarySync(ready)
+  useSettingsSync(ready)
+  useBookLookupBackfill(ready)
 
-  if (loading) return null
+  if (loading || (signedIn && !ready)) return null
   if (!signedIn) return <LoginScreen onSignIn={signIn} />
 
   return (

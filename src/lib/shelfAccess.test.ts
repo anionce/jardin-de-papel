@@ -27,21 +27,21 @@ describe("bearerToken", () => {
 describe("checkLibraryAccess", () => {
   const token = tokenFor({ email: "reader@example.com" })
 
-  it("asks Firestore for the account's library with the user's token", async () => {
+  it("asks Firestore for the account's access entry with the user's token", async () => {
     const fetchFn = respondWith(200)
     await checkLibraryAccess(token, "demo-project", fetchFn)
     expect(fetchFn).toHaveBeenCalledWith(
-      "https://firestore.googleapis.com/v1/projects/demo-project/databases/(default)/documents/libraries/reader%40example.com",
+      "https://firestore.googleapis.com/v1/projects/demo-project/databases/(default)/documents/allowedUsers/reader%40example.com",
       { headers: { Authorization: `Bearer ${token}` } }
     )
   })
 
-  it("allows accounts the rules let read their library, even before it exists", async () => {
+  it("allows accounts that are on the access list", async () => {
     expect(await checkLibraryAccess(token, "demo-project", respondWith(200))).toBe("allowed")
-    expect(await checkLibraryAccess(token, "demo-project", respondWith(404))).toBe("allowed")
   })
 
-  it("denies accounts the rules reject", async () => {
+  it("denies accounts that are not on the list or that the rules reject", async () => {
+    expect(await checkLibraryAccess(token, "demo-project", respondWith(404))).toBe("denied")
     expect(await checkLibraryAccess(token, "demo-project", respondWith(403))).toBe("denied")
   })
 

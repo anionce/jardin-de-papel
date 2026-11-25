@@ -1,5 +1,6 @@
 import { doc, onSnapshot, setDoc } from "firebase/firestore"
 import { auth, firestore } from "@/lib/firebase"
+import { currentLibrary } from "@/lib/membership"
 import { initialSettings } from "@/lib/people"
 import type { LibrarySettings } from "@/lib/types"
 
@@ -25,9 +26,8 @@ const readLocalSettings = (): LibrarySettings | null => {
 }
 
 const settingsDoc = () => {
-  const email = auth?.currentUser?.email
-  if (!firestore || !email) return null
-  return doc(firestore, SETTINGS_COLLECTION, email)
+  if (!firestore || !auth?.currentUser?.email) return null
+  return doc(firestore, SETTINGS_COLLECTION, currentLibrary())
 }
 
 export const saveSettings = async (settings: LibrarySettings) => {

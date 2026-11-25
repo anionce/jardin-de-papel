@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { claimUnownedBooks, subscribeBooks } from "@/lib/db"
+import { subscribeBooks } from "@/lib/db"
 import { useLibraryStore } from "@/store/useLibraryStore"
 
 export const useLibrarySync = (enabled: boolean) => {
@@ -9,7 +9,6 @@ export const useLibrarySync = (enabled: boolean) => {
   useEffect(() => {
     if (!enabled) return
 
-    claimUnownedBooks().catch(() => undefined)
     return subscribeBooks(setBooks, (error) => {
       const denied = "code" in error && error.code === "permission-denied"
       setError(

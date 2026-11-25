@@ -5,6 +5,7 @@ import {
   countBooksByPerson,
   FALLBACK_PERSON_NAME,
   hasSeveralPeople,
+  withMemberDefault,
   initialSettings,
   removePerson,
   removePersonPatches,
@@ -125,5 +126,18 @@ describe("settings fields other than people", () => {
     const settings = { people: ["Alex", "Sam"], defaultPerson: "Alex", hiddenWorks: ["/works/1"] }
     expect(renamePerson(settings, "Sam", "Robin").hiddenWorks).toEqual(["/works/1"])
     expect(removePerson(settings, "Sam").hiddenWorks).toEqual(["/works/1"])
+  })
+})
+
+describe("withMemberDefault", () => {
+  const settings = { people: ["Alex", "Sam"], defaultPerson: "Alex" }
+
+  it("makes the member's person the default for new books", () => {
+    expect(withMemberDefault(settings, "sam")).toEqual({ people: ["Alex", "Sam"], defaultPerson: "Sam" })
+  })
+
+  it("keeps the library default when the member has no person or an unknown one", () => {
+    expect(withMemberDefault(settings, undefined)).toBe(settings)
+    expect(withMemberDefault(settings, "Kim")).toBe(settings)
   })
 })

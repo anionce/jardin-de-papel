@@ -5,13 +5,24 @@ service cloud.firestore {
       return request.auth.token.email;
     }
 
+    function memberPath() {
+      return /databases/$(database)/documents/allowedUsers/$(signedInEmail());
+    }
+
     function isAllowed() {
-      return request.auth != null
-        && exists(/databases/$(database)/documents/allowedUsers/$(signedInEmail()));
+      return request.auth != null && exists(memberPath());
+    }
+
+    function libraryId() {
+      return get(memberPath()).data.get('library', signedInEmail());
     }
 
     function isOwner(data) {
-      return data.owner == signedInEmail();
+      return data.owner == libraryId();
+    }
+
+    match /allowedUsers/{email} {
+      allow read: if request.auth != null && email == signedInEmail();
     }
 
     match /books/{bookId} {
@@ -20,8 +31,8 @@ service cloud.firestore {
       allow update: if isAllowed() && isOwner(resource.data) && isOwner(request.resource.data);
     }
 
-    match /libraries/{email} {
-      allow read, write: if isAllowed() && email == signedInEmail();
+    match /libraries/{library} {
+      allow read, write: if isAllowed() && library == libraryId();
     }
   }
 }

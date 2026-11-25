@@ -12,6 +12,11 @@ export const initialSettings = (displayName?: string | null): LibrarySettings =>
   return { people: [name], defaultPerson: name }
 }
 
+export const withMemberDefault = (settings: LibrarySettings, memberPerson?: string): LibrarySettings => {
+  const person = memberPerson && settings.people.find((p) => samePerson(p, memberPerson))
+  return person ? { ...settings, defaultPerson: person } : settings
+}
+
 export const hasSeveralPeople = (settings: LibrarySettings) => settings.people.length > 1
 
 export const bookPerson = (book: Pick<Book, "person">, settings: LibrarySettings): string => {

@@ -15,7 +15,7 @@ import type { BookSuggestion } from "@/lib/bookLookup"
 import { applySuggestion, identityChanged, toDraft, toValues, type FormValues } from "@/lib/bookForm"
 import { addBook, removeBook, updateBook } from "@/lib/db"
 import { similarBooksFinder } from "@/lib/duplicates"
-import { hasSeveralPeople } from "@/lib/people"
+import { hasSeveralPeople, withMemberDefault } from "@/lib/people"
 import { uniqueGenres, uniquePublishers } from "@/lib/search"
 import { cn } from "@/lib/utils"
 import type { Book, BookDraft } from "@/lib/types"
@@ -61,7 +61,10 @@ const BookForm = ({ editing, onDone }: { editing: Book | null; onDone: () => voi
   const genres = useMemo(() => uniqueGenres(books), [books])
   const publishers = useMemo(() => uniquePublishers(books), [books])
   const settings = useSettingsStore((s) => s.settings)
-  const [values, setValues] = useState<FormValues>(() => toValues(editing, settings))
+  const memberPerson = useSettingsStore((s) => s.memberPerson)
+  const [values, setValues] = useState<FormValues>(() =>
+    toValues(editing, editing ? settings : withMemberDefault(settings, memberPerson))
+  )
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [similar, setSimilar] = useState<Book[] | null>(null)

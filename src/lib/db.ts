@@ -2,7 +2,6 @@ import {
   collection,
   deleteField,
   doc,
-  getDocs,
   onSnapshot,
   query,
   where,
@@ -10,18 +9,13 @@ import {
   type WriteBatch,
 } from "firebase/firestore"
 import { auth, firestore } from "@/lib/firebase"
+import { currentLibrary, currentMemberPerson } from "@/lib/membership"
 import type { Book, BookDraft } from "@/lib/types"
 
 const COLLECTION = "books"
 
 const BATCH_LIMIT = 500
 const LOCAL_KEY = "biblioteca-books"
-
-const currentOwner = (): string => {
-  const email = auth?.currentUser?.email
-  if (!email) throw new Error("Hay que entrar con Google")
-  return email
-}
 
 type Listener = (books: Book[]) => void
 
@@ -55,7 +49,7 @@ export const subscribeBooks = (onChange: Listener, onError: (error: Error) => vo
 
   const cache = new Map<string, Book>()
   return onSnapshot(
-    query(collection(firestore, COLLECTION), where("owner", "==", currentOwner())),
+    query(collection(firestore, COLLECTION), where("owner", "==", currentLibrary())),
     (snapshot) => {
       for (const change of snapshot.docChanges()) {
         if (change.type === "removed") cache.delete(change.doc.id)
@@ -86,13 +80,14 @@ export const addBooks = async (drafts: BookDraft[]) => {
   const now = Date.now()
   const addedBy = currentUserName()
 
-  const books = drafts.map((draft, i) => ({ ...draft, addedBy, createdAt: now - i }))
+  const person = currentMemberPerson()
+  const books = drafts.map((draft, i) => ({ ...draft, person: draft.person ?? person, addedBy, createdAt: now - i }))
 
   if (!firestore) {
     writeLocal([...books.map((b) => ({ ...b, id: crypto.randomUUID() })), ...readLocal()])
     return
   }
-  const owner = currentOwner()
+  const owner = currentLibrary()
   const db = firestore
   await commitInBatches(books, (batch, book) => batch.set(doc(collection(db, COLLECTION)), { ...book, owner }))
 }
@@ -122,18 +117,6 @@ export const updateEachBook = async (patches: BookPatch[]) => {
 export const updateBooks = (ids: string[], patch: Partial<BookDraft>) => updateEachBook(ids.map((id) => ({ id, patch })))
 
 export const updateBook = (id: string, patch: Partial<BookDraft>) => updateEachBook([{ id, patch }])
-
-export const claimUnownedBooks = async (): Promise<number> => {
-  const user = auth?.currentUser
-  if (!firestore || !user?.email || !user.displayName) return 0
-  const snapshot = await getDocs(collection(firestore, COLLECTION))
-  const mine = snapshot.docs.filter((d) => {
-    const data = d.data() as Partial<Book>
-    return !data.owner && data.addedBy === user.displayName
-  })
-  await commitInBatches(mine, (batch, d) => batch.update(d.ref, { owner: user.email }))
-  return mine.length
-}
 
 export const removeBooks = async (ids: string[]) => {
   if (ids.length === 0) return

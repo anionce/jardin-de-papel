@@ -25,9 +25,9 @@ export const checkLibraryAccess = async (
 ): Promise<AccessResult> => {
   const email = emailFromIdToken(token)
   if (!email) return "unauthenticated"
-  const url = `${FIRESTORE_API}/projects/${projectId}/databases/(default)/documents/libraries/${encodeURIComponent(email)}`
+  const url = `${FIRESTORE_API}/projects/${projectId}/databases/(default)/documents/allowedUsers/${encodeURIComponent(email)}`
   const response = await fetchFn(url, { headers: { Authorization: `Bearer ${token}` } })
   if (response.status === 401) return "unauthenticated"
   if (response.status === 403) return "denied"
-  return response.ok || response.status === 404 ? "allowed" : "denied"
+  return response.ok ? "allowed" : "denied"
 }
