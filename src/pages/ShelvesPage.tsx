@@ -37,8 +37,7 @@ export const ShelvesPage = () => {
         <h1 className="font-serif text-4xl leading-tight font-bold text-burgundy">Estanterías</h1>
         <Squiggle className="mt-2 text-burgundy" />
         <p className="mt-3 max-w-lg text-sm text-foreground/85">
-          Dónde está cada libro. Crea tus estanterías con una foto para reconocerlas y asígnalas desde la ficha del libro
-          o seleccionando varios a la vez.
+          Añade tus estanterías con una foto. Luego, en cada libro, elige en cuál está.
         </p>
       </section>
 

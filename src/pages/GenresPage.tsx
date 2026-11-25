@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Check, Eye, Pencil, Trash2, X } from "lucide-react"
 import { Squiggle } from "@/components/decor/Flower"
+import { GenreTagger } from "@/components/library/GenreTagger"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { updateEachBook } from "@/lib/db"
@@ -33,6 +34,8 @@ export const GenresPage = () => {
           {withoutGenre === 1 ? "libro" : "libros"} sin género
         </p>
       </section>
+
+      <GenreTagger />
 
       {rows.length > 6 && (
         <Input

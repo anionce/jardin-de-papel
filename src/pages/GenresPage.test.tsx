@@ -52,4 +52,23 @@ describe("GenresPage", () => {
 
     await waitFor(() => expect(storedBooks()[0].genres).toHaveLength(1))
   })
+
+  it("goes through the books without genre and saves the chosen ones", async () => {
+    const tagged = makeBook({ title: "Uno", author: "Ana Autora", genres: ["Misterio"] })
+    const first = makeBook({ title: "Dos", author: "Ana Autora" })
+    const second = makeBook({ title: "Tres", author: "Zoe Autora" })
+    const { user } = renderWithShelf(<GenresPage />, seedShelf([tagged, first, second]))
+
+    expect(screen.getByText(/no tienen género/)).toHaveTextContent("2 libros no tienen género")
+    await user.click(screen.getByRole("button", { name: /Ponerles género/ }))
+    expect(screen.getByRole("heading", { name: "Dos" })).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Misterio" }))
+    await user.click(screen.getByRole("button", { name: /Guardar y siguiente/ }))
+    await waitFor(() => expect(storedBooks().find((b) => b.id === first.id)?.genres).toEqual(["Misterio"]))
+
+    await user.click(screen.getByRole("button", { name: /Saltar/ }))
+    expect(await screen.findByText("Solo quedan los que has saltado")).toBeInTheDocument()
+  })
 })
+

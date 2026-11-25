@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { addGenre, cleanGenres, genreUsage, genresPatch, hasGenre, removeGenre, renameGenre } from "@/lib/genres"
+import { addGenre, cleanGenres, genreUsage, genresPatch, hasGenre, removeGenre, renameGenre, suggestedGenres, untaggedBooks } from "@/lib/genres"
 import { makeBook } from "@/test/factories"
 
 describe("cleanGenres", () => {
@@ -50,5 +50,24 @@ describe("genreUsage", () => {
       ],
       withoutGenre: 1,
     })
+  })
+})
+
+describe("untaggedBooks / suggestedGenres", () => {
+  const tagged = makeBook({ author: "Kate Morton", title: "El jardín olvidado", genres: ["Misterio", "Histórica"] })
+  const popular = makeBook({ author: "Otro", genres: ["Novela"] })
+  const popular2 = makeBook({ author: "Otra", genres: ["Novela"] })
+  const pending = makeBook({ author: "Kate Morton", title: "Las horas distantes" })
+  const earlier = makeBook({ author: "Amor Towles", title: "Normas de cortesía" })
+
+  it("lists books without genre by author, leaving out the skipped ones", () => {
+    const books = [tagged, pending, earlier, popular]
+    expect(untaggedBooks(books, new Set())).toEqual([earlier, pending])
+    expect(untaggedBooks(books, new Set([earlier.id]))).toEqual([pending])
+  })
+
+  it("suggests the author's genres first, then the most used ones", () => {
+    expect(suggestedGenres(pending, [tagged, popular, popular2, pending])).toEqual(["Misterio", "Histórica", "Novela"])
+    expect(suggestedGenres(earlier, [tagged, popular, popular2, earlier], 1)).toEqual(["Novela"])
   })
 })

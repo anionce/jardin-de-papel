@@ -17,11 +17,7 @@ export const SagasPage = () => {
       <section className="mb-8 rounded-[1.75rem] bg-mustard/45 px-7 py-9">
         <h1 className="font-serif text-4xl leading-tight font-bold text-burgundy">Sagas</h1>
         <Squiggle className="mt-2 text-burgundy" />
-        <p className="mt-3 max-w-xl text-sm text-foreground/85">
-          Las sagas de las que tienes algún libro y los que te faltan. Salen de una lista de sagas conocidas y del número
-          de saga que trae Goodreads en el título («Flanagan, #7»).
-        </p>
-        <p className="mt-2 text-sm text-foreground/85">
+        <p className="mt-3 text-sm text-foreground/85">
           {sagas.length} sagas · {incomplete.length} sin completar
         </p>
       </section>
