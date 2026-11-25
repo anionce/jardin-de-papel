@@ -54,4 +54,17 @@ describe("LibraryPage", () => {
     expect(screen.getByText("2 seleccionados")).toBeInTheDocument()
     expect(within(screen.getByText("2 seleccionados").parentElement!).getByRole("button", { name: "Ninguno" })).toBeInTheDocument()
   })
+
+  it("shows 24 books per page and moves between pages", async () => {
+    const many = Array.from({ length: 30 }, (_, i) => makeBook({ title: `Libro ${String(i + 1).padStart(2, "0")}`, createdAt: 100 - i }))
+    const { user } = renderWithShelf(<LibraryPage />, many)
+
+    expect(screen.getByRole("heading", { name: "Libro 01" })).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Libro 25" })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Página 2" }))
+    expect(await screen.findByRole("heading", { name: "Libro 25" })).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Libro 01" })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Página 2" })).toHaveAttribute("aria-current", "page")
+  })
 })

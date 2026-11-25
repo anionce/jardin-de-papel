@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom"
 import { AppShell } from "@/components/layout/AppShell"
 import { LibraryPage } from "@/pages/LibraryPage"
+import { DashboardPage } from "@/pages/DashboardPage"
 import { ImportPage } from "@/pages/ImportPage"
 import { GenresPage } from "@/pages/GenresPage"
 import { DuplicatesPage } from "@/pages/DuplicatesPage"
@@ -15,7 +16,8 @@ export const App = () => {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route index element={<LibraryPage />} />
+        <Route index element={<DashboardPage />} />
+        <Route path="biblioteca" element={<LibraryPage />} />
         <Route path="generos" element={<GenresPage />} />
         <Route path="duplicados" element={<DuplicatesPage />} />
         <Route path="personas" element={<PeoplePage />} />

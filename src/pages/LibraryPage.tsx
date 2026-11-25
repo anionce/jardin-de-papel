@@ -1,18 +1,23 @@
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
+import { useSearchParams } from "react-router-dom"
 import { ListChecks } from "lucide-react"
 import { Flower, Squiggle, Stem } from "@/components/decor/Flower"
 import { BookCard } from "@/components/library/BookCard"
 import { EmptyLibrary } from "@/components/library/EmptyLibrary"
 import { LibraryFilters } from "@/components/library/LibraryFilters"
 import { LibraryHero } from "@/components/library/LibraryHero"
+import { Pagination } from "@/components/library/Pagination"
 import { SelectionBar } from "@/components/library/SelectionBar"
 import { StatsBand } from "@/components/library/StatsBand"
 import { Button } from "@/components/ui/button"
 import { useFilteredBooks } from "@/hooks/useFilteredBooks"
+import { clampPage, pageCount, pageItems } from "@/lib/pagination"
 import { uniqueGenres } from "@/lib/search"
 import { useFiltersStore } from "@/store/useFiltersStore"
 import { useLibraryStore } from "@/store/useLibraryStore"
 import { useSelectionStore } from "@/store/useSelectionStore"
+
+const PAGE_PARAM = "pagina"
 
 export const LibraryPage = () => {
   const { books, loaded, error } = useLibraryStore()
@@ -24,6 +29,34 @@ export const LibraryPage = () => {
   const stopSelecting = useSelectionStore((s) => s.stop)
 
   useEffect(() => stopSelecting, [stopSelecting])
+
+  const [params, setParams] = useSearchParams()
+  const page = clampPage(Number(params.get(PAGE_PARAM) ?? 1), filtered.length)
+  const visible = pageItems(filtered, page)
+  const gridRef = useRef<HTMLDivElement>(null)
+  const filterKey = useFiltersStore((s) => JSON.stringify([s.text, s.read, s.genres, s.sort, s.person, s.shelf]))
+  const lastFilterKey = useRef(filterKey)
+
+  useEffect(() => {
+    if (lastFilterKey.current === filterKey) return
+    lastFilterKey.current = filterKey
+    setParams(
+      (current) => {
+        current.delete(PAGE_PARAM)
+        return current
+      },
+      { replace: true }
+    )
+  }, [filterKey, setParams])
+
+  const goToPage = (next: number) => {
+    setParams((current) => {
+      if (next === 1) current.delete(PAGE_PARAM)
+      else current.set(PAGE_PARAM, String(next))
+      return current
+    })
+    gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
 
   return (
     <>
@@ -63,11 +96,14 @@ export const LibraryPage = () => {
               </Button>
             </div>
             {filtered.length > 0 ? (
-              <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                {filtered.map((book) => (
-                  <BookCard key={book.id} book={book} />
-                ))}
-              </div>
+              <>
+                <div ref={gridRef} className="mt-8 grid scroll-mt-6 grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                  {visible.map((book) => (
+                    <BookCard key={book.id} book={book} />
+                  ))}
+                </div>
+                <Pagination page={page} count={pageCount(filtered.length)} onChange={goToPage} />
+              </>
             ) : (
               <div className="mt-10 flex flex-col items-center gap-3 text-center">
                 <p className="font-serif text-xl text-burgundy">Ningún libro coincide con la búsqueda.</p>

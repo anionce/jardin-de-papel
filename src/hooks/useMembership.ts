@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import type { User } from "firebase/auth"
-import { loadMembership } from "@/lib/membership"
+import { currentMemberPerson, loadMembership } from "@/lib/membership"
 import { useSettingsStore } from "@/store/useSettingsStore"
 
 export const useMembership = (user: User | null) => {
@@ -11,9 +11,9 @@ export const useMembership = (user: User | null) => {
   useEffect(() => {
     if (!uid) return
     let cancelled = false
-    loadMembership().then((membership) => {
+    loadMembership().then(() => {
       if (cancelled) return
-      setMemberPerson(membership?.person)
+      setMemberPerson(currentMemberPerson())
       setLoadedFor(uid)
     })
     return () => {

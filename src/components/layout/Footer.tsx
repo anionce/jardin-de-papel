@@ -7,7 +7,7 @@ export const Footer = () => {
     >
       <Squiggle className="mx-auto mb-3 opacity-70" />
       <p className="text-[11px] font-bold tracking-[0.3em] uppercase">Jardín de Papel</p>
-      <p className="mt-1.5 text-xs opacity-80">Libros para una casa con más historias.</p>
+      <p className="mt-1.5 text-xs opacity-80">Donde crecen tus libros.</p>
     </footer>
   )
 }

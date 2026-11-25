@@ -56,7 +56,7 @@ export const ImportPage = () => {
     setImporting(true)
     try {
       await addBooks(fresh)
-      navigate("/")
+      navigate("/biblioteca")
     } catch {
       setError("Algo ha fallado al guardar los libros. Inténtalo de nuevo.")
     } finally {

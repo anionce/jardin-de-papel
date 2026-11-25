@@ -54,6 +54,7 @@ To let another account use an existing library, create a document in `allowedUse
 
 - `library`: the email of the account whose library it joins. It then reads, adds and edits the same books and people.
 - `person`: the person new books from this account belong to by default (it must exist in that library's *Personas*).
+- `admin`: `true` lets the account open every library. A selector next to the book count switches between them; the choice is kept in the browser.
 
 ## People
 

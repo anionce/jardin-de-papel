@@ -13,10 +13,14 @@ service cloud.firestore {
       return /databases/$(database)/documents/allowedUsers/$(signedInEmail());
     }
 
+    function isAdmin() {
+      return exists(memberPath()) && get(memberPath()).data.get('admin', false) == true;
+    }
+
     function isLibrary(id) {
-      return exists(memberPath())
+      return isAdmin() || (exists(memberPath())
         ? id == get(memberPath()).data.get('library', signedInEmail())
-        : id == signedInEmail();
+        : id == signedInEmail());
     }
 
     match /allowedUsers/{email} {

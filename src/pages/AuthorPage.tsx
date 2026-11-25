@@ -42,7 +42,7 @@ export const AuthorPage = () => {
   return (
     <div className="pb-4">
       <section className="mb-8 rounded-[1.75rem] bg-sage px-7 py-9">
-        <Link to="/" className="inline-flex items-center gap-1 text-sm text-on-color/85 hover:text-on-color">
+        <Link to="/biblioteca" className="inline-flex items-center gap-1 text-sm text-on-color/85 hover:text-on-color">
           <ArrowLeft className="size-4" /> Biblioteca
         </Link>
         <h1 className="mt-3 font-serif text-4xl leading-tight font-bold break-words text-burgundy">{author}</h1>

@@ -10,11 +10,11 @@ export const LibraryHero = () => {
       <div className="relative grid items-center gap-8 md:grid-cols-[1fr_auto]">
         <div className="flex flex-col items-start gap-4">
           <h1 className="font-serif text-4xl leading-[1.05] font-bold text-on-color sm:text-5xl">
-            El placer
+            Tu
             <br />
-            de leer
+            biblioteca
           </h1>
-          <p className="text-[15px] text-on-color/85">Donde crecen tus libros.</p>
+          <p className="text-[15px] text-on-color/85">Busca, filtra y encuentra cualquier libro.</p>
           <SearchBar />
         </div>
         <BookStack className="mx-auto hidden w-56 md:block lg:w-64" />

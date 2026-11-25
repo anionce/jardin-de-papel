@@ -121,7 +121,7 @@ const ShelfItem = ({ shelf, bookCount: count, settings }: ShelfItemProps) => {
   const showBooks = () => {
     resetFilters()
     setShelf(shelf.name)
-    navigate("/")
+    navigate("/biblioteca")
   }
 
   return (

@@ -103,7 +103,7 @@ const GenreItem = ({ row, existing }: { row: GenreUsage; existing: GenreUsage[] 
     setText("")
     setReadFilter("all")
     setGenreFilter([row.name])
-    navigate("/")
+    navigate("/biblioteca")
   }
 
   return (
