@@ -88,6 +88,12 @@ export const uniquePublishers = (books: Book[]): string[] => {
   return names.sort(collator.compare)
 }
 
+export const isFromPublisher = (book: Pick<Book, "publisher">, name: string): boolean =>
+  Boolean(book.publisher?.trim()) && normalize(book.publisher ?? "") === normalize(name)
+
+export const booksByPublisher = (books: Book[], name: string): Book[] =>
+  books.filter((book) => isFromPublisher(book, name)).sort(sorter("author-asc"))
+
 export const bookKey = (book: Pick<Book, "title" | "author" | "goodreadsId">): string => {
   if (book.goodreadsId) return `gr:${book.goodreadsId}`
   return `ta:${normalize(book.title ?? "")}|${normalize(book.author ?? "")}`

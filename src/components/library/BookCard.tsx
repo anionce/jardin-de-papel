@@ -1,4 +1,4 @@
-import { memo } from "react"
+import { Fragment, memo } from "react"
 import { Link } from "react-router-dom"
 import { BookMarked, Check, MapPin } from "lucide-react"
 import { BookCover } from "@/components/library/BookCover"
@@ -22,7 +22,8 @@ export const BookCard = memo(({ book }: { book: Book }) => {
   const settings = useSettingsStore((s) => s.settings)
   const owner = hasSeveralPeople(settings) ? bookPerson(book, settings) : undefined
   const place = [bookShelf(book, settings), book.location].filter(Boolean).join(" · ")
-  const meta = [book.year, book.publisher, book.pages && `${book.pages} págs.`].filter(Boolean).join(" · ")
+  const publisher = book.publisher?.trim()
+  const pages = book.pages ? `${book.pages} págs.` : undefined
 
   return (
     <article className="group flex flex-col items-center text-center">
@@ -62,7 +63,25 @@ export const BookCard = memo(({ book }: { book: Book }) => {
           {book.author}
         </Link>
       )}
-      {meta && <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{meta}</p>}
+      {(book.year || publisher || pages) && (
+        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+          {[book.year, publisher && "publisher", pages].filter(Boolean).map((part, i) => (
+            <Fragment key={i}>
+              {i > 0 && " · "}
+              {part === "publisher" ? (
+                <Link
+                  to={`/editorial/${encodeURIComponent(publisher ?? "")}`}
+                  className="underline-offset-2 hover:text-burgundy hover:underline"
+                >
+                  {publisher}
+                </Link>
+              ) : (
+                part
+              )}
+            </Fragment>
+          ))}
+        </p>
+      )}
       {owner && <p className="mt-0.5 text-[11px] font-semibold text-sage-deep">De {owner}</p>}
       {place && (
         <p className="mt-0.5 inline-flex max-w-full items-center gap-0.5 text-[11px] text-muted-foreground">
